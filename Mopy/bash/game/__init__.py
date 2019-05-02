@@ -386,6 +386,7 @@ class GameInfo(object):
     # Race Patcher
     #--------------------------------------------------------------------------
     default_eyes = {}
+    race_tweaks = ()
     race_types = ()
 
     #--------------------------------------------------------------------------
@@ -472,8 +473,8 @@ class GameInfo(object):
         'destructible_types', 'gmstEids', 'graphicsFidTypes',
         'graphicsLongsTypes', 'graphicsModelAttrs', 'graphicsTypes',
         'inventoryTypes', 'keywords_types', 'listTypes', 'namesTypes',
-        'pricesTypes', 'race_types', 'record_type_name', 'save_rec_types',
-        'scripts_types', 'soundsLongsTypes', 'soundsTypes',
+        'pricesTypes', 'race_tweaks', 'race_types', 'record_type_name',
+        'save_rec_types', 'scripts_types', 'soundsLongsTypes', 'soundsTypes',
         'spell_stats_attrs', 'statsHeaders', 'statsTypes', 'text_long_types',
         'text_types', 'xEdit_expert',
     }
