@@ -1677,6 +1677,7 @@ default_eyes = {
 }
 # Clean these up, no need to keep them around now
 del _cobl, _ob
+race_types = ('EYES', 'HAIR', 'NPC_', 'RACE')
 
 #------------------------------------------------------------------------------
 # Text Patcher
