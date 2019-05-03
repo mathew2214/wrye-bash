@@ -386,10 +386,15 @@ class GameInfo(object):
     # Race Patcher
     #--------------------------------------------------------------------------
     default_eyes = {}
-    race_auto_keys = set()
+    race_auto_key = set()
     race_rec_attrs = {}
-    race_tweaks = ()
     race_types = ()
+
+    #--------------------------------------------------------------------------
+    # Race Tweaker
+    #--------------------------------------------------------------------------
+    race_tweaks = ()
+    race_tweak_types = ()
 
     #--------------------------------------------------------------------------
     # Keywords Patcher
@@ -475,10 +480,11 @@ class GameInfo(object):
         'destructible_types', 'gmstEids', 'graphicsFidTypes',
         'graphicsLongsTypes', 'graphicsModelAttrs', 'graphicsTypes',
         'inventoryTypes', 'keywords_types', 'listTypes', 'namesTypes',
-        'pricesTypes', 'race_auto_keys', 'race_rec_attrs', 'race_tweaks',
-        'race_types', 'record_type_name', 'save_rec_types', 'scripts_types',
-        'soundsLongsTypes', 'soundsTypes', 'spell_stats_attrs', 'statsHeaders',
-        'statsTypes', 'text_long_types', 'text_types', 'xEdit_expert',
+        'pricesTypes', 'race_auto_key', 'race_rec_attrs', 'race_tweaks',
+        'race_tweak_types', 'race_types', 'record_type_name', 'save_rec_types',
+        'scripts_types', 'soundsLongsTypes', 'soundsTypes',
+        'spell_stats_attrs', 'statsHeaders', 'statsTypes', 'text_long_types',
+        'text_types', 'xEdit_expert',
     }
 
     @classmethod
