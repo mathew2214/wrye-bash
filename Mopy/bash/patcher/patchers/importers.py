@@ -1185,64 +1185,7 @@ class CBash_DeathItemPatcher(CBash_ImportPatcher):
 class ImportFactions(_SimpleImporter):
     logMsg = u'\n=== ' + _(u'Refactioned Actors')
     srcsHeader = u'=== ' + _(u'Source Mods/Files')
-
-    def initData(self,progress):
-        """Get names from source files."""
-        actorFactions = self._parse_sources(progress, parser=ActorFactions)
-        if not actorFactions: return
-        #--Finish
-        id_factions = self.id_data
-        for type, aFid_factions in actorFactions.id_stored_info.iteritems():
-            if type not in ('CREA','NPC_'): continue
-            self.srcClasses.add(MreRecord.type_class[type])
-            for longid,factions in aFid_factions.iteritems():
-                id_factions[longid] = factions
-        self.isActive = bool(self.srcClasses)
-
-    def scanModFile(self, modFile, progress): # scanModFile2
-        """Scan modFile."""
-        id_factions = self.id_data
-        mapper = modFile.getLongMapper()
-        for recClass in self.srcClasses:
-            if recClass.classType not in modFile.tops: continue
-            patchBlock = getattr(self.patchFile, recClass.classType)
-            id_records = patchBlock.id_records
-            for record in modFile.tops[recClass.classType].getActiveRecords():
-                fid = record.fid
-                if not record.longFids: fid = mapper(fid)
-                if fid in id_records: continue
-                if fid not in id_factions: continue
-                patchBlock.setRecord(record.getTypeCopy(mapper))
-
-    def _inner_loop(self, keep, records, top_mod_rec, type_count):
-        id_data, set_id_data = self.id_data, set(self.id_data)
-        for record in records:
-            fid = record.fid
-            if fid not in set_id_data: continue
-            newFactions = set(id_data[fid])
-            curFactions = set((x.faction, x.rank) for x in record.factions)
-            changed = newFactions - curFactions
-            if not changed: continue
-            doKeep = False
-            for faction, rank in changed:
-                for entry in record.factions:
-                    if entry.faction == faction:
-                        if entry.rank != rank:
-                            entry.rank = rank
-                            doKeep = True
-                            keep(fid)
-                        break
-                else:
-                    entry = MelObject()
-                    entry.faction = faction
-                    entry.rank = rank
-                    entry.unused1 = 'ODB'
-                    record.factions.append(entry)
-                    doKeep = True
-            if doKeep:
-                record.factions = [x for x in record.factions if x.rank != -1]
-                type_count[top_mod_rec] += 1
-                keep(fid)
+    rec_attrs = {x: (u'factions',) for x in bush.game.actor_types}
 
 class CBash_ImportFactions(_RecTypeModLogging):
     listSrcs = False
