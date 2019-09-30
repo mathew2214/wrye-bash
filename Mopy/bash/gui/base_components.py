@@ -29,6 +29,8 @@ __author__ = 'nycz, Infernio'
 
 import wx as _wx
 
+from .events import EventHandler
+
 # Utilities -------------------------------------------------------------------
 class Color(object):
     """A simple RGB(A) color class used to avoid having to return wx.Colour
@@ -192,3 +194,64 @@ class _AComponent(object):
 
         :param new_position: A tuple of two integers, X and Y."""
         self._native_widget.Move(new_position)
+
+    @property
+    def component_uid(self):
+        """Retrieves the ID of this component. Can be used to determine if an
+        event applies to this component if it is keyed by ID.
+
+        :return: The ID of this component."""
+        return self._native_widget.GetId()
+
+class _DraggableComponent(_AComponent):
+    """A component that can be dragged and dropped. Exposes necessary events
+    for that use case. Note that any component using this class will have to
+    call _create_drag_event_handlers() after constructing its _native_widget.
+    Also offers some specialized methods for capturing the mouse that most
+    components do not need.
+
+    Events:
+     - on_drag_started(id: int, position: Tuple[int, int])
+       Called when this element is starting to be dragged. Parameters are the
+       ID of this element, which is useful if multiple draggable components are
+       sending events to the same method, and the position of the dragged
+       component.
+     - on_drag_started(id: int, position: Tuple[int, int])
+       Called when this element is no longer being dragged. Parameters are the
+       ID of this element, which is useful if multiple draggable components are
+       sending events to the same method, and the position of the dragged
+       component."""
+
+    def _create_drag_event_handlers(self):
+        """Creates the EventHandler instances needed to handle drag-n-drop
+        events. Must be called after _native_widget has been properly
+        created."""
+        self.on_drag_started = EventHandler(
+            self._native_widget, _wx.EVT_LEFT_DOWN,
+            lambda event: [event.GetId(), event.GetPosition()])
+        self.on_drag_stopped = EventHandler(
+            self._native_widget, _wx.EVT_LEFT_UP,
+            lambda event: [event.GetId(), event.GetPosition()])
+        target_element._native_widget.Bind(_wx.EVT_MOUSE_CAPTURE_LOST,
+                                           self.OnDragEndForced)
+        target_element._native_widget.Bind(_wx.EVT_MOTION, self.OnDrag)
+
+    @property
+    def mouse_captured(self): # type: () -> bool
+        """Returns True if this component currently has the mouse capture.
+
+        :return: True if this component has the mouse capture."""
+        return self._native_widget.HasCapture()
+
+    @mouse_captured.setter
+    def mouse_captured(self, do_capture): # type: (bool) -> None
+        """Makes this component capture all mouse input or stops capturing
+        mouse input. Automatically checks if the component already has mouse
+        input captured and skips the operation if that is the case.
+
+        :param do_capture: True if you want to start capturing, False if you
+            want to release an existing capture."""
+        if do_capture and not self.mouse_captured:
+            self._native_widget.CaptureMouse()
+        elif not do_capture and self.mouse_captured:
+            self._native_widget.ReleaseMouse()

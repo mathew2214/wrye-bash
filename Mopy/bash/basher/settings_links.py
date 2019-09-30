@@ -251,7 +251,7 @@ class Settings_IconSize(RadioLink):
 
     def Execute(self):
         bass.settings['bash.statusbar.iconSize'] = self.sb_icon_size
-        Link.Frame.statusBar.UpdateIconSizes()
+        Link.Frame.statusBar.update_icon_sizes()
 
 #------------------------------------------------------------------------------
 class Settings_StatusBar_ShowVersions(CheckLink):

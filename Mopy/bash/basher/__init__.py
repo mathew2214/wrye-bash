@@ -80,14 +80,14 @@ startupinfo = bolt.startupinfo
 from .. import balt
 from ..balt import CheckLink, EnabledLink, SeparatorLink, Link, \
     ChoiceLink, staticBitmap, AppendableLink, ListBoxes, \
-    INIListCtrl, DnDStatusBar, NotebookPanel, BaltFrame, set_event_hook, Events
+    INIListCtrl, NotebookPanel, BaltFrame, set_event_hook, Events
 from ..balt import spinCtrl
 from ..balt import colors, images, Image, Resources
 from ..balt import Links, ItemLink
 
 from ..gui import Button, CancelButton, CheckBox, HLayout, Label, \
     LayoutOptions, RIGHT, SaveButton, Spacer, Stretch, TextArea, TextField, \
-    TOP, VLayout
+    TOP, VLayout, ASplitStatusBar
 
 # Constants -------------------------------------------------------------------
 from .constants import colorInfo, settingDefaults, karmacons, installercons
@@ -3580,14 +3580,16 @@ class BashNotebook(wx.Notebook, balt.TabDragMixin):
             event.Skip() ##: shouldn't this always be called ?
 
 #------------------------------------------------------------------------------
-class BashStatusBar(DnDStatusBar):
+class BashStatusBar(ASplitStatusBar):
     #--Class Data
+    buttons = Links()
     SettingsMenu = Links()
     obseButton = None
     laaButton = None
 
-    def UpdateIconSizes(self):
-        self.buttons = [] # will be populated with _displayed_ gButtons - g ?
+    def update_icon_sizes(self):
+        # Will be populated with _displayed_ gButtons - g ?
+        self._first_section_components = []
         order = settings['bash.statusbar.order']
         orderChanged = False
         hide = settings['bash.statusbar.hide']
@@ -3606,13 +3608,15 @@ class BashStatusBar(DnDStatusBar):
             if not link.IsPresent(): continue
             # Add it
             try:
-                self._addButton(link)
+                actual_button = link.GetBitmapButton(self)
+                if actual_button:
+                    self.add_component(actual_button)
             except AttributeError: # 'App_Button' object has no attribute 'imageKey'
                 deprint(u'Failed to load button %r' % (uid,), traceback=True)
         # Add any new buttons
-        for link in BashStatusBar.buttons:
+        for new_button in BashStatusBar.buttons:
             # Already tested?
-            uid = link.uid
+            uid = new_button.uid
             if uid in order: continue
             # Remove any hide settings, if they exist
             if uid in hide:
@@ -3621,13 +3625,18 @@ class BashStatusBar(DnDStatusBar):
             order.append(uid)
             orderChanged = True
             try:
-                self._addButton(link)
+                actual_button = new_button.GetBitmapButton(self)
+                if actual_button:
+                    self.add_component(actual_button)
             except AttributeError:
                 deprint(u'Failed to load button %r' % (uid,), traceback=True)
         # Update settings
         if orderChanged: settings.setChanged('bash.statusbar.order')
         if hideChanged: settings.setChanged('bash.statusbar.hide')
         self._do_refresh(refresh_icon_size=True)
+
+    def icon_size(self):
+        return settings['bash.statusbar.iconSize'] + 8
 
     def HideButton(self,button):
         if button in self.buttons:
@@ -3650,10 +3659,10 @@ class BashStatusBar(DnDStatusBar):
             # Not specified, put it at the end
             order.append(uid)
             settings.setChanged('bash.statusbar.order')
-            self._addButton(link)
+            self.add_component(link)
         else:
             # Specified, but now factor in hidden buttons, etc
-            self._addButton(link)
+            self.add_component(link)
             button = self.buttons.pop()
             thisIndex, insertBefore = order.index(link.uid), 0
             for i in range(len(self.buttons)):
@@ -3720,8 +3729,8 @@ class BashFrame(BaltFrame):
         #--Window
         super(BashFrame, self).__init__(parent, title=u'Wrye Bash')
         self.SetTitle()
-        #--Status Bar
-        self.SetStatusBar(BashStatusBar(self))
+        #--Status Bar - TODO(inf) de-wx!
+        self.SetStatusBar(BashStatusBar(self)._native_widget)
         #--Notebook panel
         # attributes used when ini panel is created (warn for missing game ini)
         self.oblivionIniCorrupted = u''

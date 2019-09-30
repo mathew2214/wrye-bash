@@ -29,7 +29,7 @@ __author__ = 'nycz, Infernio'
 
 import wx as _wx
 
-from .base_components import _AComponent
+from .base_components import _AComponent, _DraggableComponent
 from .events import EventHandler
 
 class _AButton(_AComponent):
@@ -262,8 +262,10 @@ class ReloadButton(ImageButton):
                                            tooltip=_(u'Reload'),
                                            exact_fit=True)
 
-class ClickableImage(ImageButton):
-    """An image that acts like a button. Has no text and no borders.
+class ClickableImage(ImageButton, _DraggableComponent):
+    """An image that acts like a button. Has no text and no borders. Also
+    supports dragging and dropping. Mostly used to implement the 'icons' in the
+    status bar.
 
     See Button for documentation on button events."""
     def __init__(self, parent, image, tooltip=None):
@@ -276,3 +278,4 @@ class ClickableImage(ImageButton):
                         button."""
         super(ClickableImage, self).__init__(parent, image, tooltip=tooltip,
                                              exact_fit=True, no_border=True)
+        self._create_drag_event_handlers()
