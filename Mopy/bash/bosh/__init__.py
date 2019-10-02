@@ -2983,7 +2983,7 @@ class ScreensData(DataStore):
 
     def __init__(self):
         self.store_dir = dirs['app']
-        self.data = {} #--data[Path] = (ext,mtime)
+        self.data = {} #--data[Path] = (ext,mtime,size)
 
     def refresh(self):
         """Refresh list of screenshots."""
@@ -2998,7 +2998,8 @@ class ScreensData(DataStore):
             filePath = self.store_dir.join(fileName)
             maImageExt = self.reImageExt.search(fileName.s)
             if maImageExt and filePath.isfile():
-                newData[fileName] = (maImageExt.group(1).lower(),filePath.mtime)
+                newData[fileName] = (maImageExt.group(1).lower(),
+                                     filePath.mtime, filePath.size)
         changed = (self.data != newData)
         self.data = newData
         return changed
