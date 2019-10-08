@@ -265,8 +265,6 @@ class MreLeveledList(MelRecord):
                   'boundX2','boundY2','boundZ2'),
         MelLevListLvld('LVLD','B','chanceNone'),
         MelStruct('LVLF','B',(_flags,'flags',0L)),
-        MelFid('SCRI','script'),
-        MelFid('TNAM','template'),
         MelFid('LVLG','glob'),
         MelGroups('entries',
                   MelLevListLvlo('LVLO','h2sIh2s','level',('unused1',null2),(FID,'listId',None),('count',1),('unused2',null2)),
@@ -299,14 +297,10 @@ class MreLeveledList(MelRecord):
         #--Relevel or not?
         if other.relevs:
             self.chanceNone = other.chanceNone
-            self.script = other.script
-            self.template = other.template
             self.flags = other.flags()
             self.glob = other.glob
         else:
             self.chanceNone = other.chanceNone or self.chanceNone
-            self.script   = other.script or self.script
-            self.template = other.template or self.template
             self.flags |= other.flags
             self.glob = other.glob or self.glob
         #--Remove items based on other.removes
@@ -328,12 +322,9 @@ class MreLeveledList(MelRecord):
             self.entries.sort(key=attrgetter('listId','level','count','owner','condition'))
         #--Is merged list different from other? (And thus written to patch.)
         if (self.chanceNone != other.chanceNone or
-            self.script != other.script or
-            self.template != other.template or
             #self.flags != other.flags or
             self.glob != other.glob or
-            len(self.entries) != len(other.entries)
-            ):
+            len(self.entries) != len(other.entries)):
             self.mergeOverLast = True
         else:
             otherlist = other.entries
@@ -850,10 +841,37 @@ class MreCams(MelRecord):
 class MreCell(MelRecord):
     """Cell record."""
     classType = 'CELL'
-    cellFlags = Flags(0L,Flags.getNames((0, 'isInterior'),(1,'hasWater'),(2,'invertFastTravel'),
-        (3,'forceHideLand'),(5,'publicPlace'),(6,'handChanged'),(7,'behaveLikeExterior')))
-    inheritFlags = Flags(0L,Flags.getNames('ambientColor','directionalColor','fogColor','fogNear','fogFar',
-        'directionalRotation','directionalFade','clipDistance','fogPower'))
+
+    cellFlags = Flags(0L, Flags.getNames(
+        (0, 'isInterior'),
+        (1, 'hasWater'),
+        (2, 'invertFastTravel'),
+        (3, 'noLODWater'),
+        (5, 'publicPlace'),
+        (6, 'handChanged'),
+        (7, 'behaveLikeExterior')
+    ))
+
+    inheritFlags = Flags(0L, Flags.getNames(
+        'ambientColor',
+        'directionalColor',
+        'fogColor',
+        'fogNear',
+        'fogFar',
+        'directionalRotation',
+        'directionalFade',
+        'clipDistance',
+        'fogPower'
+    ))
+
+    # 'Force Hide Land' flags
+    CellFHLFlags = Flags(0L, Flags.getNames(
+        (0, 'quad1'),
+        (1, 'quad2'),
+        (2, 'quad3'),
+        (3, 'quad4'),
+    ))
+
     class MelCoordinates(MelOptStruct):
         """Handle older truncated XCLC for CELL subrecord."""
         def loadData(self, record, ins, sub_type, size_, readId):
@@ -870,9 +888,11 @@ class MreCell(MelRecord):
                 if callable(action): value = action(value)
                 setter(attr,value)
             if self._debug: print unpacked, record.flags.getTrueAttrs()
+
         def dumpData(self,record,out):
             if not record.flags.isInterior:
                 MelOptStruct.dumpData(self,record,out)
+
     class MelCellXcll(MelOptStruct):
         """Handle older truncated XCLL for CELL subrecord."""
         def loadData(self, record, ins, sub_type, size_, readId):
@@ -889,11 +909,13 @@ class MreCell(MelRecord):
                 if callable(action): value = action(value)
                 setter(attr,value)
             if self._debug: print unpacked, record.flags.getTrueAttrs()
+
     melSet = MelSet(
         MelString('EDID','eid'),
         MelString('FULL','full'),
         MelStruct('DATA','B',(cellFlags,'flags',0L)),
-        MelCoordinates('XCLC','iiI',('posX',None),('posY',None),('forceHideLand',0L)),
+        MelCoordinates('XCLC','iiI',('posX',None),('posY',None),
+                       (CellFHLFlags, 'fhlFlags', 0L)),
         MelCellXcll('XCLL','=3Bs3Bs3Bs2f2i3f','ambientRed','ambientGreen','ambientBlue',
             ('unused1',null1),'directionalRed','directionalGreen','directionalBlue',
             ('unused2',null1),'fogRed','fogGreen','fogBlue',
@@ -916,7 +938,7 @@ class MreCell(MelRecord):
         MelFid('XCAS','acousticSpace'),
         MelOptStruct('XCMT','B','xcmt_p'),
         MelFid('XCMO','music'),
-        )
+    )
     __slots__ = melSet.getSlotsUsed()
 
 #------------------------------------------------------------------------------
@@ -1118,7 +1140,7 @@ class MreCrea(MreActor):
         MelBase('NIFT','nift_p'), ###Texture File hashes, Byte Array
         MelStruct('ACBS','=I2Hh3HfhH',(_flags,'flags',0L),'fatigue',
             'barterGold',('level',1),'calcMin','calcMax','speedMultiplier',
-            'karma','dispotionBase','templateFlags'),
+            'karma','dispositionBase','templateFlags'),
         MelStructs('SNAM','=IB3s','factions',
             (FID,'faction',None),'rank',('unused1','IFZ')),
         MelFid('INAM','deathItem'),
@@ -1150,7 +1172,7 @@ class MreCrea(MreActor):
         (aggroflags,'aggroRadiusBehavior',0L),'aggroRadius'),
         MelFids('PKID','aiPackages'),
         MelStrings('KFFZ','animations'),
-        MelStruct('DATA','=4Bh2sh7B','type','combatSkill','magicSkill',
+        MelStruct('DATA','=4Bh2sh7B','creatureType','combatSkill','magicSkill',
             'stealthSkill','health',('unused2',null2),'damage','strength',
             'perception','endurance','charisma','intelligence','agility',
             'luck'),
@@ -2541,7 +2563,7 @@ class MreNpc(MreActor):
         MelStruct('ACBS','=I2Hh3Hf2H',
             (_flags,'flags',0L),'fatigue','barterGold',
             ('level',1),'calcMin','calcMax','speedMultiplier','karma',
-            'dispotionBase','templateFlags'),
+            'dispositionBase','templateFlags'),
         MelStructs('SNAM','=IB3s','factions',
             (FID,'faction',None),'rank',('unused1','ODB')),
         MelFid('INAM','deathItem'),
@@ -3849,7 +3871,7 @@ class MreSpel(MelRecord,MreHasEffects):
     """Actor Effect"""
     classType = 'SPEL'
     class SpellFlags(Flags):
-        """For SpellFlags, immuneSilence activates bits 1 AND 3."""
+        """For SpellFlags, immuneToSilence activates bits 1 AND 3."""
         def __setitem__(self,index,value):
             setter = Flags.__setitem__
             setter(self,index,value)

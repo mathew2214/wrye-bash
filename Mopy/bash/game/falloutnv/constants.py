@@ -482,13 +482,16 @@ GmstTweaks = [
         (_('x 10'), 600.0*10,  5000),
         (_(u'Custom'),600,      800),
         ),
-    (_(u'Compass: POI Recognition'),_(u"Distance at which POI markers begin to show on compass."),
-        ('iMapMarkerVisibleDistance',),
-        (_('x 0.05'),1000),
-        (_('x 0.25'),5000),
-        (_('x 0.50'),10000),
-        (_('x 0.75'),15000),
-        (_(u'Custom (base 1200)'),1200),
+    (_(u'Compass: Recognition Distance'),_(u'Distance at which markers (dungeons, towns etc.) begin to show on the compass.'),
+     (u'iMapMarkerVisibleDistance',),
+        (_(u'75% Shorter'),  3125),
+        (_(u'50% Shorter'),  6250),
+        (_(u'25% Shorter'),  9375),
+        (_(u'[Default]'),    12500),
+        (_(u'25% Further'),  15625),
+        (_(u'50% Further'),  18750),
+        (_(u'75% Further'),  21875),
+        (_(u'Custom'),       12500),
         ),
     (_(u'Essential NPC Unconsciousness'),_(u"Time which essential NPCs stay unconscious."),
         ('fEssentialDeathTime',),
@@ -743,36 +746,42 @@ listTypes = ('LVLC','LVLI','LVLN')
 #------------------------------------------------------------------------------
 namesTypes = {
     'ACTI', 'ALCH', 'AMMO', 'ARMO', 'AVIF', 'BOOK', 'CCRD', 'CHAL', 'CHIP',
-    'CLAS', 'CMNY', 'CONT', 'CREA', 'CSNO', 'DOOR', 'EYES', 'FACT', 'HAIR',
-    'IMOD', 'INGR', 'KEYM', 'LIGH', 'MESG', 'MGEF', 'MISC', 'NOTE', 'NPC_',
-    'PERK', 'RACE', 'RCCT', 'RCPE', 'REPU', 'SPEL', 'TACT', 'TERM', 'WEAP',
+    'CLAS', 'CMNY', 'COBJ', 'CONT', 'CREA', 'CSNO', 'DOOR', 'EYES', 'FACT',
+    'HAIR', 'IMOD', 'INGR', 'KEYM', 'LIGH', 'MESG', 'MGEF', 'MISC', 'NOTE',
+    'NPC_', 'PERK', 'RACE', 'RCCT', 'RCPE', 'REPU', 'SPEL', 'TACT', 'TERM',
+    'WEAP',
 }
 #------------------------------------------------------------------------------
 # ItemPrices Patcher
 #------------------------------------------------------------------------------
-pricesTypes = {'ALCH':{},'AMMO':{},'ARMO':{},'ARMA':{},'BOOK':{},'INGR':{},'KEYM':{},'LIGH':{},'MISC':{},'WEAP':{}}
+pricesTypes = {'ALCH': {}, 'AMMO': {}, 'ARMO': {}, 'ARMA': {}, 'BOOK': {},
+               'INGR': {}, 'KEYM': {}, 'LIGH': {}, 'MISC': {}, 'WEAP': {}}
 #------------------------------------------------------------------------------
 # StatsImporter
 #------------------------------------------------------------------------------
 statsTypes = {
-        'ALCH':('eid', 'weight', 'value'),
-        'AMMO':('eid', 'weight', 'value', 'speed', 'clipRounds','projPerShot'),
-        'ARMA':('eid', 'weight', 'value', 'health', 'ar','dt'),
-        'ARMO':('eid', 'weight', 'value', 'health', 'ar','dt'),
-        'BOOK':('eid', 'weight', 'value'),
-        'INGR':('eid', 'weight', 'value'),
-        'KEYM':('eid', 'weight', 'value'),
-        'LIGH':('eid', 'weight', 'value', 'duration'),
-        'MISC':('eid', 'weight', 'value'),
-        'WEAP':('eid', 'weight', 'value', 'health', 'damage','clipsize',
-                'animationMultiplier','reach','ammoUse','minSpread','spread','sightFov','baseVatsToHitChance','projectileCount',
-                'minRange','maxRange','animationAttackMultiplier','fireRate','overrideActionPoint','rumbleLeftMotorStrength',
-                'rumbleRightMotorStrength','rumbleDuration','overrideDamageToWeaponMult','attackShotsPerSec',
-                'reloadTime','jamTime','aimArc','rambleWavelangth','limbDmgMult','sightUsage',
-                'semiAutomaticFireDelayMin','semiAutomaticFireDelayMax',
-                'strengthReq','regenRate','killImpulse','impulseDist','skillReq',
-                'criticalDamage','criticalMultiplier',
-                'vatsSkill','vatsDamMult','vatsAp'),
+        'ALCH': ('eid', 'weight', 'value'),
+        'AMMO': ('eid', 'weight', 'value', 'speed', 'clipRounds',
+                 'projPerShot'),
+        'ARMA': ('eid', 'weight', 'value', 'health', 'ar','dt'),
+        'ARMO': ('eid', 'weight', 'value', 'health', 'ar','dt'),
+        'BOOK': ('eid', 'weight', 'value'),
+        'INGR': ('eid', 'weight', 'value'),
+        'KEYM': ('eid', 'weight', 'value'),
+        'LIGH': ('eid', 'weight', 'value', 'duration'),
+        'MISC': ('eid', 'weight', 'value'),
+        'WEAP': ('eid', 'weight', 'value', 'health', 'damage','clipsize',
+                 'animationMultiplier','reach','ammoUse','minSpread','spread',
+                 'sightFov','baseVatsToHitChance','projectileCount','minRange',
+                 'maxRange','animationAttackMultiplier','fireRate',
+                 'overrideActionPoint','rumbleLeftMotorStrength',
+                 'rumbleRightMotorStrength','rumbleDuration',
+                 'overrideDamageToWeaponMult','attackShotsPerSec','reloadTime',
+                 'jamTime','aimArc','rambleWavelangth','limbDmgMult',
+                 'sightUsage','semiAutomaticFireDelayMin',
+                 'semiAutomaticFireDelayMax','strengthReq','regenRate',
+                 'killImpulse','impulseDist','skillReq','criticalDamage',
+                 'criticalMultiplier','vatsSkill','vatsDamMult','vatsAp'),
     }
 statsHeaders = (
         #--Alch
@@ -834,13 +843,15 @@ statsHeaders = (
 # SoundPatcher
 #------------------------------------------------------------------------------
 # Needs longs in SoundPatcher
-soundsLongsTypes = {'ACTI', 'ADDN', 'ALCH', 'ASPC', 'CONT', 'CREA', 'DOOR',
-                    'LIGH', 'MGEF', 'SOUN', 'WATR', 'WTHR', 'WEAP', 'TACT'}
+soundsLongsTypes = {'ACTI', 'ADDN', 'ALCH', 'ASPC', 'COBJ', 'CONT', 'CREA',
+                    'DOOR', 'LIGH', 'MGEF', 'SOUN', 'WATR', 'WTHR', 'WEAP',
+                    'TACT'}
 soundsTypes = {
     "ACTI": ('soundLooping','soundActivation',),
     "ADDN": ('ambientSound',),
     "ALCH": ('dropSound','pickupSound','soundConsume',),
     "ASPC": ('soundLooping','useSoundFromRegion',),
+    "COBJ": ('pickupSound','dropSound',),
     "CONT": ('soundOpen','soundClose','soundRandomLooping',),
     "CREA": ('footWeight','inheritsSoundsFrom','sounds'),
     "DOOR": ('soundOpen','soundClose','soundLoop',),
@@ -861,47 +872,52 @@ soundsTypes = {
 #------------------------------------------------------------------------------
 # CellImporter
 #------------------------------------------------------------------------------
-cellAutoKeys = {u'C.Acoustic', u'C.Climate', u'C.Encounter', u'C.ImageSpace',
-                u'C.Light', u'C.Music', u'C.Name', u'C.Owner',
-                u'C.RecordFlags', u'C.Water'} #,u'C.Maps')
+cellAutoKeys = {u'C.Acoustic', u'C.Climate', u'C.Encounter',
+                u'C.ForceHideLand', u'C.ImageSpace', u'C.Light', u'C.Music',
+                u'C.Name', u'C.Owner', u'C.RecordFlags', u'C.Regions',
+                u'C.Water'} #,u'C.Maps')
 cellRecAttrs = {
-            u'C.Acoustic': ('acousticSpace',),
-            u'C.Climate': ('climate',),
-            u'C.Encounter': ('encounterZone',),
-            u'C.ImageSpace': ('imageSpace',),
-            u'C.Light': ('lightTemplate','ambientRed','ambientGreen','ambientBlue','unused1',
-                        'directionalRed','directionalGreen','directionalBlue','unused2',
-                        'fogRed','fogGreen','fogBlue','unused3',
-                        'fogNear','fogFar','directionalXY','directionalZ',
-                        'directionalFade','fogClip',),
-            u'C.Music': ('music',),
-            u'C.Name': ('full',),
-            u'C.Owner': ('ownership',),
-            u'C.RecordFlags': ('flags1',), # Yes seems funky but thats the way it is
-            u'C.Water': ('water','waterHeight',),
-            }
+    u'C.Acoustic': ('acousticSpace',),
+    u'C.Climate': ('climate',),
+    u'C.Encounter': ('encounterZone',),
+    u'C.ForceHideLand': ('fhlFlags',),
+    u'C.ImageSpace': ('imageSpace',),
+    u'C.Light': ('lightTemplate','ambientRed','ambientGreen','ambientBlue','unused1',
+                'directionalRed','directionalGreen','directionalBlue','unused2',
+                'fogRed','fogGreen','fogBlue','unused3',
+                'fogNear','fogFar','directionalXY','directionalZ',
+                'directionalFade','fogClip',),
+    u'C.Music': ('music',),
+    u'C.Name': ('full',),
+    u'C.Owner': ('ownership',),
+    u'C.RecordFlags': ('flags1',), # Yes seems funky but thats the way it is
+    u'C.Regions': ('regions',),
+    u'C.Water': ('water','waterHeight',),
+}
 cellRecFlags = {
-            u'C.Acoustic': '',
-            u'C.Climate': 'behaveLikeExterior',
-            u'C.Encounter': '',
-            u'C.ImageSpace': '',
-            u'C.Light': '',
-            u'C.Music': '',
-            u'C.Name': '',
-            u'C.Owner': 'publicPlace',
-            u'C.RecordFlags': '',
-            u'C.Water': 'hasWater',
-            }
+    u'C.Acoustic': '',
+    u'C.Climate': 'behaveLikeExterior',
+    u'C.Encounter': '',
+    u'C.ForceHideLand': '',
+    u'C.ImageSpace': '',
+    u'C.Light': '',
+    u'C.Music': '',
+    u'C.Name': '',
+    u'C.Owner': 'publicPlace',
+    u'C.RecordFlags': '',
+    u'C.Regions': '',
+    u'C.Water': 'hasWater',
+}
 #------------------------------------------------------------------------------
 # GraphicsPatcher
 #------------------------------------------------------------------------------
 graphicsLongsTypes = {'ACTI', 'ALCH', 'AMMO', 'ARMA', 'ARMO', 'AVIF', 'BOOK',
-                      'BPTD', 'CCRD', 'CHIP', 'CLAS', 'CMNY', 'CREA', 'CSNO',
-                      'DOOR', 'EFSH', 'EXPL', 'FURN', 'GRAS', 'HDPT', 'IMOD',
-                      'INGR', 'IPCT', 'IPDS', 'KEYM', 'LIGH', 'LSCR', 'MICN',
-                      'MISC', 'MSTT', 'NOTE', 'NPC_', 'PERK', 'PROJ', 'PWAT',
-                      'REPU', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST', 'WEAP',
-                      'MGEF',}
+                      'BPTD', 'CCRD', 'CHIP', 'CLAS', 'CMNY', 'COBJ', 'CREA',
+                      'CSNO', 'DOOR', 'EFSH', 'EXPL', 'FURN', 'GRAS', 'HDPT',
+                      'IMOD', 'INGR', 'IPCT', 'IPDS', 'KEYM', 'LIGH', 'LSCR',
+                      'MICN', 'MISC', 'MSTT', 'NOTE', 'NPC_', 'PERK', 'PROJ',
+                      'PWAT', 'REPU', 'STAT', 'TACT', 'TERM', 'TREE', 'TXST',
+                      'WEAP', 'MGEF',}
 graphicsTypes = {
     "ACTI": ('model',),
     "ALCH": ('iconPath','smallIconPath','model',),
@@ -919,8 +935,8 @@ graphicsTypes = {
     "CHIP": ('iconPath','smallIconPath','model',),
     "CLAS": ('iconPath',),
     "CMNY": ('iconPath','smallIconPath','model',),
-    "CREA": ('model','bodyParts','nift_p','bodyPartData','impactDataset',
-             'effect',),
+    "COBJ": ('iconPath','smallIconPath','model',),
+    "CREA": ('model','bodyParts','nift_p','bodyPartData','effect',),
     "CSNO": ('chipModels','slotMachineModel','blackjackTableModel',
              'extraBlackjackTableModel','rouletteTableModel',
              'slotReelTextures','blackjackDecks',),
@@ -1059,6 +1075,137 @@ default_eyes = {
 }
 # Clean this up, no need to keep it around now
 del _fnv
+
+#------------------------------------------------------------------------------
+# Text Patcher
+#------------------------------------------------------------------------------
+text_long_types = {'NOTE',}
+text_types = {
+    'AVIF': ('description',),
+    'BOOK': ('text',),
+    'CHAL': ('description',),
+    'CLAS': ('description',),
+    'IMOD': ('description',),
+    'LSCR': ('text',),
+    'MESG': ('description',),
+    'MGEF': ('text',),
+    'NOTE': ('textTopic',),
+    'PERK': ('description',),
+    # omit RACE - covered by R.Description
+    'TERM': ('description',),
+}
+
+#------------------------------------------------------------------------------
+# Contents Checker
+#------------------------------------------------------------------------------
+# Entry types used for CONT, CREA, LVLI and NPC_
+_common_entry_types = {'ALCH', 'AMMO', 'ARMO', 'BOOK', 'CCRD', 'CHIP', 'CMNY',
+                       'IMOD', 'KEYM', 'LIGH', 'LVLI', 'MISC', 'NOTE', 'WEAP'}
+cc_valid_types = {
+    'CONT': _common_entry_types,
+    'CREA': _common_entry_types,
+    'LVLC': {'CREA', 'LVLC'},
+    'LVLN': {'LVLN', 'NPC_'},
+    'LVLI': _common_entry_types,
+    'NPC_': _common_entry_types,
+}
+cc_passes = (
+    (('LVLC', 'LVLN', 'LVLI'), 'entries', 'listId'),
+    (('CONT', 'CREA', 'NPC_'), 'items', 'item'),
+)
+
+#------------------------------------------------------------------------------
+# Scripts Patcher
+#------------------------------------------------------------------------------
+# In valda's version: 'WEAP', 'ACTI', 'ALCH', 'ARMO', 'BOOK', 'CONT', 'CREA',
+#                     'DOOR', 'FURN', 'INGR', 'KEYM', 'LIGH', 'MISC', 'NPC_',
+#                     'QUST', 'TERM', 'TACT', 'CCRD' - basically fo3 + CCRD
+scripts_types = ('ACTI', 'ALCH', 'AMMO', 'ARMO', 'BOOK', 'CCRD', 'CHAL',
+                 'COBJ', 'CONT', 'CREA', 'DOOR', 'FURN', 'INGR', 'IMOD',
+                 'KEYM', 'LIGH', 'MISC', 'NPC_', 'QUST', 'TACT', 'TERM',
+                 'WEAP')
+
+#------------------------------------------------------------------------------
+# Destructible Patcher
+#------------------------------------------------------------------------------
+destructible_types = ('ACTI', 'ALCH', 'AMMO', 'ARMO', 'BOOK', 'CHIP', 'CONT',
+                      'CREA', 'DOOR', 'FURN', 'IMOD', 'KEYM', 'LIGH', 'MISC',
+                      'MSTT', 'NPC_', 'PROJ', 'TACT', 'TERM', 'WEAP')
+
+#------------------------------------------------------------------------------
+# Actor Patchers
+#------------------------------------------------------------------------------
+actor_importer_attrs = {
+    # Matches FO3 exactly
+    'CREA': {
+        u'Actors.ACBS': ('barterGold', 'calcMax', 'calcMin', 'dispositionBase',
+                         'fatigue', 'flags.allowPCDialogue',
+                         'flags.allowPickpocket', 'flags.biped',
+                         'flags.cantOpenDoors', 'flags.essential',
+                         'flags.flies', 'flags.immobile', 'flags.invulnerable',
+                         'flags.isGhost', 'flags.noBloodDecal',
+                         'flags.noBloodSpray', 'flags.noCombatInWater',
+                         'flags.noHead', 'flags.noKnockDown',
+                         'flags.noLeftArm', 'flags.noLowLevel',
+                         'flags.noRightArm', 'flags.noRotatingHeadTrack',
+                         'flags.noShadow', 'flags.notPushable',
+                         'flags.noVATSMelee', 'flags.pcLevelOffset',
+                         'flags.respawn', 'flags.swims', 'flags.tiltFrontBack',
+                         'flags.tiltLeftRight', 'flags.walks',
+                         'flags.weaponAndShield', 'karma', 'level',
+                         'speedMultiplier', 'templateFlags',),
+        u'Actors.AIData': ('aggression', 'aggroRadius', 'aggroRadiusBehavior',
+                           'assistance', 'confidence', 'energyLevel', 'mood',
+                           'responsibility', 'services', 'trainLevel',
+                           'trainSkill',),
+        u'Actors.CombatStyle': ('combatStyle',),
+        u'Actors.Skeleton': ('model',),
+        u'Actors.Stats': ('agility', 'charisma', 'combatSkill', 'damage',
+                          'endurance', 'health', 'intelligence', 'luck',
+                          'magicSkill', 'perception', 'stealthSkill',
+                          'strength',),
+        u'Creatures.Blood': ('impactDataset',),
+        u'Creatures.Type': ('creatureType',),
+        u'NPC.Class': (),
+        u'NPC.Race': (),
+    },
+    # Same as the FO3 one, except for the added 'flags.autocalcService'
+    'NPC_': {
+        u'Actors.ACBS': ('barterGold', 'calcMax', 'calcMin', 'dispositionBase',
+                         'fatigue', 'flags.autoCalc', 'flags.autocalcService',
+                         'flags.canBeAllRaces', 'flags.essential',
+                         'flags.female', 'flags.isChargenFacePreset',
+                         'flags.noBloodDecal', 'flags.noBloodSpray',
+                         'flags.noKnockDown', 'flags.noLowLevel',
+                         'flags.noRotatingHeadTrack', 'flags.notPushable',
+                         'flags.noVATSMelee', 'flags.pcLevelOffset',
+                         'flags.respawn', 'flags.useTemplate', 'karma',
+                         'level', 'speedMultiplier', 'templateFlags',),
+        u'Actors.AIData': ('aggression', 'aggroRadius', 'aggroRadiusBehavior',
+                           'assistance', 'confidence', 'energyLevel', 'mood',
+                           'responsibility', 'services', 'trainLevel',
+                           'trainSkill',),
+        u'Actors.CombatStyle': ('combatStyle',),
+        u'Actors.Skeleton': ('model',),
+        u'Actors.Stats': ('attributes', 'health', 'skillOffsets',
+                          'skillValues'),
+        u'Creatures.Blood': (),
+        u'Creatures.Type': (),
+        u'NPC.Class': ('iclass',),
+        u'NPC.Race': ('race',),
+    },
+}
+actor_importer_auto_key = {
+    u'Actors.ACBS', u'Actors.AIData', u'Actors.CombatStyle',
+    u'Actors.Skeleton', u'Actors.Stats', u'Creatures.Blood', u'Creatures.Type',
+    u'NPC.Class', u'NPC.Race',
+}
+actor_types = ('CREA', 'NPC_')
+
+#------------------------------------------------------------------------------
+# Spell Stats Patcher
+#------------------------------------------------------------------------------
+spell_stats_attrs = ('eid', 'full', 'cost', 'level', 'spellType',)
 
 # Record type to name dictionary
 record_type_name = {

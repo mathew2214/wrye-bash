@@ -847,13 +847,16 @@ GmstTweaks = [
         (_(u'POIs'),            1802),
         (_(u'Quests and POIs'), 1801),
         ),
-    (_(u'Compass: POI Recognition'),
-     _(u'Distance at which POI markers begin to show on compass.'),
-        (u'iMapMarkerVisibleDistance',),
-        (u'x 0.25',                  3000),
-        (u'x 0.50',                  6000),
-        (u'x 0.75',                  9000),
-        (_(u'Custom (base 12000)'), 12000),
+    (_(u'Compass: Recognition Distance'),_(u'Distance at which markers (dungeons, towns etc.) begin to show on the compass.'),
+     (u'iMapMarkerVisibleDistance',),
+        (_(u'75% Shorter'),  3125),
+        (_(u'50% Shorter'),  6250),
+        (_(u'25% Shorter'),  9375),
+        (_(u'[Default]'),    12500),
+        (_(u'25% Further'),  15625),
+        (_(u'50% Further'),  18750),
+        (_(u'75% Further'),  21875),
+        (_(u'Custom'),       12500),
         ),
     (_(u'Essential NPC Unconsciousness'),
      _(u'Time which essential NPCs stay unconscious.'),
@@ -878,12 +881,13 @@ GmstTweaks = [
         (u'x 5',      40.0, 20.0),
         (_(u'Custom'), 8.0,  4.0),
         ),
-    (_(u'Horse Turning Speed'),
-     _(u'Speed at which horses turn.'),
-        (u'iHorseTurnDegreesPerSecond',),
-        (u'x 1.5',                  68),
-        (u'x 2.0',                  90),
-        (_(u'Custom (base is 45)'), 45),
+    (_(u'Horse Turning Speed'), _(u'Speed at which your horse can turn.'),
+        (u'iHorseTurnDegreesPerSecond', u'iHorseTurnDegreesRampUpPerSecond',),
+        (_(u'[Default]'), 45, 80),
+        (u'x1.5',         68, 120),
+        (u'x2',           90, 160),
+        (u'x3',           135, 240),
+        (_(u'Custom (Turning and ramp-up speeds)'), 45, 80),
         ),
     (_(u'Jump Higher'),_(u'Maximum height player can jump to.'),
         (u'fJumpHeightMax',),
@@ -1030,11 +1034,14 @@ GmstTweaks = [
         (_(u'Custom'), 0.9),
         ),
     (_(u'Greeting Distance'),
-     _(u'Distance at which NPCs will greet the player. Default: 150'),
+     _(u'Distance (in units) at which NPCs will greet the player.'),
         (u'fAIMinGreetingDistance',),
+        (u'50',        50.0),
         (u'100',       100.0),
         (u'125',       125.0),
         (u'[150]',     150.0),
+        (u'200',       200.0),
+        (u'300',       300.0),
         (_(u'Custom'), 150.0),
         ),
     (_(u'Cost Multiplier: Recharge'),_(u'Cost factor for recharging items.'),
@@ -1131,6 +1138,7 @@ GmstTweaks = [
     (_(u'Combat: Max Ally Hits'),
      _(u'Maximum number of hits on an ally allowed in combat before the ally will attack the hitting character.'),
         (u'iAllyHitAllowed',),
+        (u'0',         0),
         (u'3',         3),
         (u'[5]',       5),
         (u'8',         8),
@@ -1151,6 +1159,9 @@ GmstTweaks = [
         ),
     (_(u'Bounty: Attack'),_(u"Bounty for attacking a 'good' npc."),
         (u'iCrimeGoldAttackMin',),
+        (u'40',        40),
+        (u'100',       300),
+        (u'200',       300),
         (u'300',       300),
         (u'400',       400),
         (u'[500]',     500),
@@ -1160,11 +1171,15 @@ GmstTweaks = [
         ),
     (_(u'Bounty: Horse Theft'),_(u'Bounty for horse theft'),
         (u'iCrimeGoldStealHorse',),
+        (u'10',        10),
+        (u'25',        25),
+        (u'50',        50),
         (u'100',       100),
         (u'200',       200),
         (u'[250]',     250),
         (u'300',       300),
         (u'450',       450),
+        (_(u'Custom'), 100),
         (_(u'Custom'), 250),
         ),
     (_(u'Bounty: Theft'),_(u'Bounty for stealing, as fraction of item value.'),
@@ -1214,6 +1229,7 @@ GmstTweaks = [
         (u'[85]',      85.0),
         (u'90',        90.0),
         (u'95',        95.0),
+        (u'100',       100.0),
         (_(u'Custom'), 85.0),
         ),
     (_(u'Warning: Interior Distance to Hostiles'),
@@ -1264,16 +1280,18 @@ GmstTweaks = [
     (_(u'Inventory Quantity Prompt'),
      _(u'Number of items in a stack at which point Oblivion prompts for a quantity.'),
         (u'iInventoryAskQuantityAt',),
-        (u'1',                1),
+        (_(u'Always Prompt'), 1),
         (u'2',                2),
         (u'[3]',              3),
         (u'4',                4),
-        (u'10',              10),
-        (_(u'No Prompt'), 99999),
-        (_(u'Custom'),        3),
+        (u'5',                5),
+        (u'10',               10),
+        (u'20',               20),
+        (_(u'Never Prompt'),  99999),
+        (_(u'Custom'),        5),
         ),
-    (_(u'Crime: Trespass Fine'),_(u'Fine in septims for trespassing.'),
-        (u'iCrimeGoldTresspass',),
+    (_(u'Bounty: Trespassing'),_(u'Bounty for trespassing.'),
+        (u'iCrimeGoldTresspass',), # (sic)
         (u'1',         1),
         (u'[5]',       5),
         (u'8',         8),
@@ -1281,7 +1299,7 @@ GmstTweaks = [
         (u'20',       20),
         (_(u'Custom'), 5),
         ),
-    (_(u'Crime: Pickpocketing Fine'),_(u'Fine in septims for trespassing.'),
+    (_(u'Bounty: Pickpocketing'),_(u'Bounty for pickpocketing.'),
         (u'iCrimeGoldPickpocket',),
         (u'5',          5),
         (u'8',          8),
@@ -1340,8 +1358,11 @@ GmstTweaks = [
     (_(u'Drag: Max Moveable Weight'),
      _(u'Maximum weight to be able move things with the drag key.'),
         (u'fMoveWeightMax',),
-        (_(u'MovableBodies.esp (1500)'), 1500.0),
-        (_(u'[Default (150)]'),           150.0),
+        (u'115',                          115.0),
+        (u'[150]',                        150.0),
+        (u'250',                          250.0),
+        (u'500',                          500.0),
+        (_(u'MovableBodies.esp (1500)'),  1500.0),
         (_(u'Custom'),                    150.0),
         ),
     (_(u'AI: Conversation Chance'),
@@ -1361,6 +1382,34 @@ GmstTweaks = [
         (u'50',         50.0),
         (u'100',       100.0),
         (_(u'Custom'), 100.0),
+        ),
+    (_(u'Crime: Pickpocketing Chance'), _(u'Improve chances of successful pickpocketing'),
+        (u'fPickPocketMinChance', u'fPickPocketMaxChance',),
+        (u'0% to 50%',   0,  50),
+        (u'0% to 75%',   0,  75),
+        (u'[0% to 90%]', 0,  90),
+        (u'0% to 100%',  20, 100),
+        (u'25% to 100%', 25, 100),
+        (u'50% to 100%', 50, 100),
+        (_(u'Custom (Min and Max Chance)'), 0, 90),
+        ),
+    (_(u'Max Jump Height'),_(u'Increases the height to which you can jump. NOTE: Some values can cause your character to experience fall damage!'),
+        (u'fJumpHeightMin',),
+        (u'0.5x',      38),
+        (u'[1x]',      76),
+        (u'2x',        152),
+        (u'3x',        228),
+        (u'4x',        304),
+        (_(u'Custom'), 76),
+        ),
+    (_(u'Bounty: Murder'),_(u'Bounty for committing a witnessed murder.'),
+        (u'iCrimeGoldMurder',),
+        (u'500',       500),
+        (u'750',       750),
+        (u'[1000]',    1000),
+        (u'1250',      1250),
+        (u'1500',      1500),
+        (_(u'Custom'), 1000),
         ),
     ]
 
@@ -1628,6 +1677,105 @@ default_eyes = {
 }
 # Clean these up, no need to keep them around now
 del _cobl, _ob
+
+#------------------------------------------------------------------------------
+# Text Patcher
+#------------------------------------------------------------------------------
+text_types = {
+    'BOOK': ('text',),
+    'BSGN': ('text',),
+    'CLAS': ('description',),
+    'LSCR': ('text',),
+    'MGEF': ('text',),
+    # omit RACE - covered by R.Description
+    'SKIL': ('description',),
+}
+
+#------------------------------------------------------------------------------
+# Contents Checker
+#------------------------------------------------------------------------------
+# Entry types used for CONT, CREA, LVLI and NPC_
+_common_entry_types = {'ALCH', 'AMMO', 'APPA', 'ARMO', 'BOOK', 'CLOT', 'INGR',
+                       'KEYM', 'LIGH', 'LVLI', 'MISC', 'SGST', 'SLGM', 'WEAP'}
+cc_valid_types = {
+    'CONT': _common_entry_types,
+    'CREA': _common_entry_types,
+    'LVLC': {'CREA', 'LVLC', 'NPC_'},
+    'LVLI': _common_entry_types,
+    'LVSP': {'LVSP', 'SPEL'},
+    'NPC_': _common_entry_types,
+}
+cc_passes = (
+    (('LVLC', 'LVLI', 'LVSP'), 'entries', 'listId'),
+    (('CONT', 'CREA', 'NPC_'), 'items', 'item'),
+)
+
+#------------------------------------------------------------------------------
+# Scripts Patcher
+#------------------------------------------------------------------------------
+scripts_types = ('ACTI', 'ALCH', 'APPA', 'ARMO', 'BOOK', 'CLOT', 'CONT',
+                 'CREA', 'DOOR', 'FLOR', 'FURN', 'INGR', 'KEYM', 'LIGH',
+                 'MISC', 'NPC_', 'QUST', 'SGST', 'SLGM', 'WEAP')
+
+#------------------------------------------------------------------------------
+# Actor Patchers
+#------------------------------------------------------------------------------
+actor_importer_attrs = {
+    'CREA': {
+        u'Actors.ACBS': ('barterGold', 'baseSpell', 'calcMax', 'calcMin',
+                         'fatigue', 'flags.biped', 'flags.essential',
+                         'flags.flies', 'flags.noBloodDecal',
+                         'flags.noBloodSpray', 'flags.noCombatInWater',
+                         'flags.noCorpseCheck', 'flags.noHead',
+                         'flags.noLeftArm', 'flags.noLowLevel',
+                         'flags.noRightArm', 'flags.noShadow',
+                         'flags.pcLevelOffset', 'flags.respawn', 'flags.swims',
+                         'flags.walks', 'flags.weaponAndShield',
+                         'level'),
+        u'Actors.AIData': ('aggression', 'confidence', 'energyLevel',
+                           'responsibility', 'services', 'trainLevel',
+                           'trainSkill'),
+        u'Actors.CombatStyle': ('combatStyle',),
+        u'Actors.Skeleton': ('model',),
+        u'Actors.Stats': ('agility', 'attackDamage', 'combatSkill',
+                          'endurance', 'health', 'intelligence', 'luck',
+                          'magic', 'personality', 'soul', 'stealth', 'speed',
+                          'strength', 'willpower'),
+        u'Creatures.Blood': ('bloodDecalPath', 'bloodSprayPath'),
+        u'Creatures.Type': ('creatureType',),
+        u'NPC.Class': (),
+        u'NPC.Race': (),
+    },
+    'NPC_': {
+        u'Actors.ACBS': ('barterGold', 'baseSpell', 'calcMax', 'calcMin',
+                         'fatigue', 'flags.autoCalc', 'flags.canCorpseCheck',
+                         'flags.essential', 'flags.female', 'flags.noLowLevel',
+                         'flags.noPersuasion', 'flags.noRumors',
+                         'flags.pcLevelOffset', 'flags.respawn',
+                         'flags.summonable', 'level',),
+        u'Actors.AIData': ('aggression', 'confidence', 'energyLevel',
+                           'responsibility', 'services', 'trainSkill',
+                           'trainLevel'),
+        u'Actors.CombatStyle': ('combatStyle',),
+        u'Actors.Skeleton': ('model',),
+        u'Actors.Stats': ('attributes', 'health', 'skills',),
+        u'Creatures.Blood': (),
+        u'Creatures.Type': (),
+        u'NPC.Class': ('iclass',),
+        u'NPC.Race': ('race',),
+    },
+}
+actor_importer_auto_key = {
+    u'Actors.ACBS', u'Actors.AIData', u'Actors.CombatStyle',
+    u'Actors.Skeleton', u'Actors.Stats', u'Creatures.Blood', u'Creatures.Type',
+    u'NPC.Class', u'NPC.Race',
+}
+actor_types = ('CREA', 'NPC_')
+
+#------------------------------------------------------------------------------
+# Spell Stats Patcher
+#------------------------------------------------------------------------------
+spell_stats_attrs = ('eid', 'full', 'cost', 'level', 'spellType',)
 
 # Record type to name dictionary
 record_type_name = {

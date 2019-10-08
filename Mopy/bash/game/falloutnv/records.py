@@ -439,10 +439,37 @@ class MreCdck(MelRecord):
 class MreCell(MelRecord):
     """Cell record."""
     classType = 'CELL'
-    cellFlags = Flags(0L,Flags.getNames((0, 'isInterior'),(1,'hasWater'),(2,'invertFastTravel'),
-        (3,'forceHideLand'),(5,'publicPlace'),(6,'handChanged'),(7,'behaveLikeExterior')))
-    inheritFlags = Flags(0L,Flags.getNames('ambientColor','directionalColor','fogColor','fogNear','fogFar',
-        'directionalRotation','directionalFade','clipDistance','fogPower'))
+
+    cellFlags = Flags(0L, Flags.getNames(
+        (0, 'isInterior'),
+        (1, 'hasWater'),
+        (2, 'invertFastTravel'),
+        (3, 'noLODWater'),
+        (5, 'publicPlace'),
+        (6, 'handChanged'),
+        (7, 'behaveLikeExterior')
+    ))
+
+    inheritFlags = Flags(0L, Flags.getNames(
+        'ambientColor',
+        'directionalColor',
+        'fogColor',
+        'fogNear',
+        'fogFar',
+        'directionalRotation',
+        'directionalFade',
+        'clipDistance',
+        'fogPower'
+    ))
+
+    # 'Force Hide Land' flags
+    CellFHLFlags = Flags(0L, Flags.getNames(
+        (0, 'quad1'),
+        (1, 'quad2'),
+        (2, 'quad3'),
+        (3, 'quad4'),
+    ))
+
     class MelCoordinates(MelOptStruct):
         """Handle older truncated XCLC for CELL subrecord."""
         def loadData(self, record, ins, sub_type, size_, readId):
@@ -459,9 +486,11 @@ class MreCell(MelRecord):
                 if callable(action): value = action(value)
                 setter(attr,value)
             if self._debug: print unpacked, record.flags.getTrueAttrs()
+
         def dumpData(self,record,out):
             if not record.flags.isInterior:
                 MelOptStruct.dumpData(self,record,out)
+
     class MelCellXcll(MelOptStruct):
         """Handle older truncated XCLL for CELL subrecord."""
         def loadData(self, record, ins, sub_type, size_, readId):
@@ -478,11 +507,13 @@ class MreCell(MelRecord):
                 if callable(action): value = action(value)
                 setter(attr,value)
             if self._debug: print unpacked, record.flags.getTrueAttrs()
+
     melSet = MelSet(
         MelString('EDID','eid'),
         MelString('FULL','full'),
         MelStruct('DATA','B',(cellFlags,'flags',0L)),
-        MelCoordinates('XCLC','iiI',('posX',None),('posY',None),('forceHideLand',0L)),
+        MelCoordinates('XCLC','iiI',('posX',None),('posY',None),
+                       (CellFHLFlags, 'fhlFlags', 0L)),
         MelCellXcll('XCLL','=3Bs3Bs3Bs2f2i3f','ambientRed','ambientGreen','ambientBlue',
             ('unused1',null1),'directionalRed','directionalGreen','directionalBlue',
             ('unused2',null1),'fogRed','fogGreen','fogBlue',
@@ -505,7 +536,7 @@ class MreCell(MelRecord):
         MelOwnership(),
         MelFid('XCAS','acousticSpace'),
         MelFid('XCMO','music'),
-        )
+    )
     __slots__ = melSet.getSlotsUsed()
 
 #------------------------------------------------------------------------------
