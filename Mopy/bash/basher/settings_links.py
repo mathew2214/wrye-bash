@@ -22,7 +22,6 @@
 #
 # =============================================================================
 
-import locale
 import sys
 
 from . import BashFrame, BashStatusBar
@@ -33,6 +32,7 @@ from ..balt import ItemLink, AppendableLink, RadioLink, CheckLink, MenuLink, \
     TransLink, EnabledLink, BoolLink, tooltip, Link
 from ..bolt import deprint, GPath
 from ..exception import BoltError
+from ..localize import dump_translator
 # TODO(ut): settings links do not seem to use Link.data attribute - it's None..
 
 __all__ = ['Settings_BackupSettings', 'Settings_RestoreSettings',
@@ -43,8 +43,6 @@ __all__ = ['Settings_BackupSettings', 'Settings_RestoreSettings',
            'Settings_UseAltName', 'Settings_Deprint',
            'Settings_DumpTranslator', 'Settings_UAC']
 
-def _bassLang(): return bass.language if bass.language else \
-    locale.getlocale()[0].split('_', 1)[0]
 #------------------------------------------------------------------------------
 # Settings Links --------------------------------------------------------------
 #------------------------------------------------------------------------------
@@ -278,15 +276,15 @@ class Settings_Languages(TransLink):
     """Menu for available Languages."""
     def _decide(self, window, selection):
         languages = []
-        for file in bass.dirs['l10n'].list():
-            if file.cext == u'.txt' and file.csbody[-3:] != u'new':
-                languages.append(file.body)
+        for f in bass.dirs['l10n'].list():
+            if f.cext == u'.txt' and f.csbody[-3:] != u'new':
+                languages.append(f.body)
         if languages:
             subMenu = MenuLink(_(u'Language'))
             for lang in languages:
-                subMenu.links.append(Settings_Language(lang.s))
+                subMenu.links.append(_Settings_Language(lang.s))
             if GPath('english') not in languages:
-                subMenu.links.append(Settings_Language('English'))
+                subMenu.links.append(_Settings_Language('English'))
             return subMenu
         else:
             class _NoLang(EnabledLink):
@@ -297,7 +295,7 @@ class Settings_Languages(TransLink):
             return _NoLang()
 
 #------------------------------------------------------------------------------
-class Settings_Language(RadioLink):
+class _Settings_Language(EnabledLink, RadioLink):
     """Specific language for Wrye Bash."""
     languageMap = {
         u'chinese (simplified)': _(u'Chinese (Simplified)') + u' (简体中文)',
@@ -310,13 +308,13 @@ class Settings_Language(RadioLink):
         }
 
     def __init__(self, lang):
-        super(Settings_Language, self).__init__()
+        super(_Settings_Language, self).__init__()
         self._lang = lang
         self._text = self.__class__.languageMap.get(self._lang.lower(),
                                                     self._lang)
 
     def _initData(self, window, selection):
-        if self._lang == _bassLang():
+        if bass.active_locale.lower() in self._lang.lower():
             self._help = _(u"Currently using %(languagename)s as the active "
                           u"language.") % ({'languagename': self._text})
             self.check = True
@@ -328,8 +326,9 @@ class Settings_Language(RadioLink):
 
     def _check(self): return self.check
 
+    def _enable(self): return not self.check
+
     def Execute(self):
-        if self._lang == _bassLang(): return
         if balt.askYes(Link.Frame,
                 _(u'Wrye Bash needs to restart to change languages.  Do you '
                   u'want to restart?'), _(u'Restart Wrye Bash')):
@@ -337,7 +336,7 @@ class Settings_Language(RadioLink):
 
 #------------------------------------------------------------------------------
 class Settings_PluginEncodings(MenuLink):
-    encodings = {
+    _plugin_encodings = {
         'gbk': _(u'Chinese (Simplified)'),
         'big5': _(u'Chinese (Traditional)'),
         'cp1251': _(u'Russian'),
@@ -347,10 +346,9 @@ class Settings_PluginEncodings(MenuLink):
         }
     def __init__(self):
         super(Settings_PluginEncodings, self).__init__(_(u'Plugin Encoding'))
-        bolt.pluginEncoding = bass.settings['bash.pluginEncoding'] # TODO(ut): why is this init here ??
         self.links.append(Settings_PluginEncoding(_(u'Automatic'),None))
         # self.links.append(SeparatorLink())
-        enc_name = sorted(Settings_PluginEncodings.encodings.items(),key=lambda x: x[1])
+        enc_name = sorted(self._plugin_encodings.items(), key=lambda x: x[1])
         for encoding,name in enc_name:
             self.links.append(Settings_PluginEncoding(name,encoding))
 
@@ -486,11 +484,11 @@ class Settings_DumpTranslator(AppendableLink, ItemLink):
             u'This function is for translating Bash itself (NOT mods) into '
             u'non-English languages.  For more info, '
             u'see Internationalization section of Bash readme.')
-        if not self._askContinue(message, 'bash.dumpTranslator.continue',
+        if not self._askContinue(message, 'bash.dump_translator.continue',
                                 _(u'Dump Translator')): return
         outPath = bass.dirs['l10n']
         with balt.BusyCursor():
-            outFile = bolt.dumpTranslator(outPath.s, _bassLang())
+            outFile = dump_translator(outPath.s, bass.active_locale)
         self._showOk(_(
             u'Translation keys written to ') + u'Mopy\\bash\\l10n\\' + outFile,
                      _(u'Dump Translator') + u': ' + outPath.stail)

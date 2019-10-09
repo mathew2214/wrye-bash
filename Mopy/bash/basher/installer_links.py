@@ -45,8 +45,7 @@ from .. import bass, bolt, bosh, bush, balt, archives
 from ..balt import EnabledLink, CheckLink, AppendableLink, OneItemLink, \
     UIList_Rename, UIList_Hide
 from ..belt import InstallerWizard, generateTweakLines
-from ..bolt import GPath, deprint, SubProgress, LogFile, formatInteger, \
-    round_size
+from ..bolt import GPath, deprint, SubProgress, LogFile, round_size
 from ..exception import CancelError, SkipError, StateError
 
 __all__ = ['Installer_Open', 'Installer_Duplicate', 'InstallerOpenAt_MainMenu',
@@ -1073,27 +1072,35 @@ class InstallerArchive_Unpack(AppendableLink, _InstallerLink):
 
     @balt.conversation
     def Execute(self):
-        #--Copy to Build
-        with balt.Progress(_(u"Unpacking to Project..."),u'\n'+u' '*60) as progress:
+        # Ask the user first to avoid the progress dialog shoving itself over
+        # any dialogs we pop up
+        to_unpack = []
+        for archive, installer in self.idata.sorted_pairs(self.selected):
+            project = archive.root
+            if self.isSingleArchive():
+                result = self._askText(_(u"Unpack %s to Project:") % archive.s,
+                                       default=project.s)
+                if not result: return
+                # Error checking
+                project = GPath(result).tail
+                if not project.s or project.cext in archives.readExts:
+                    self._showWarning(_(u"%s is not a valid project name.") %
+                                      result)
+                    return
+                if self.idata.store_dir.join(project).isfile():
+                    self._showWarning(_(u"%s is a file.") % project.s)
+                    return
+            if project in self.idata:
+                if not self._askYes(
+                    _(u"%s already exists. Overwrite it?") % project.s,
+                    default=False): continue
+            # All check passed, we can unpack this
+            to_unpack.append((installer, project))
+        # We're safe to show the progress dialog now
+        with balt.Progress(_(u"Unpacking to Project..."),u'\n'+u' '*60) \
+                as progress:
             projects = []
-            for archive, installer in self.idata.sorted_pairs(self.selected):
-                project = archive.root
-                if self.isSingleArchive():
-                    result = self._askText(_(u"Unpack %s to Project:") % archive.s,
-                                           default=project.s)
-                    if not result: return
-                    #--Error checking
-                    project = GPath(result).tail
-                    if not project.s or project.cext in archives.readExts:
-                        self._showWarning(_(u"%s is not a valid project name.") % result)
-                        return
-                    if self.idata.store_dir.join(project).isfile():
-                        self._showWarning(_(u"%s is a file.") % project.s)
-                        return
-                if project in self.idata:
-                    if not self._askYes(
-                        _(u"%s already exists. Overwrite it?") % project.s,
-                        default=False): continue
+            for installer, project in to_unpack:
                 installer.unpackToProject(project,SubProgress(progress,0,0.8))
                 self.idata.refresh_installer(project, is_project=True,
                     progress=SubProgress(progress, 0.8, 0.99),
@@ -1339,8 +1346,10 @@ class InstallerConverter_Create(_InstallerConverter_Link):
 ##            log('{{CSS:wtxt_sand_small.css}}')
             log(u'. '+_(u'Name')+u': '+BCFArchive.s)
             log(u'. '+_(u'Size')+u': %s'% round_size(converter.fullPath.size))
-            log(u'. '+_(u'Remapped')+u': %s'%formatInteger(len(converter.convertedFiles))+(_(u'file'),_(u'files'))[len(converter.convertedFiles) > 1])
-            log.setHeader(u'. '+_(u'Requires')+u': %s'%formatInteger(len(converter.srcCRCs))+(_(u'file'),_(u'files'))[len(converter.srcCRCs) > 1])
+            log(u'. ' + _(u'Remapped: %u file(s)') %
+                len(converter.convertedFiles))
+            log.setHeader(u'. ' + _(u'Requires: %u file(s)') %
+                          len(converter.srcCRCs))
             log(u'  * '+u'\n  * '.join(sorted(u'(%08X) - %s' % (x, crc_installer[x].archive) for x in converter.srcCRCs if x in crc_installer)))
             log.setHeader(u'. '+_(u'Options:'))
             log(u'  * '+_(u'Skip Voices')+u'   = %s'%bool(converter.skipVoices))
@@ -1354,10 +1363,8 @@ class InstallerConverter_Create(_InstallerConverter_Link):
             log(u'  *  '+_(u'Has Extra Directories')+u' = %s'%bool(converter.hasExtraData))
             log(u'  *  '+_(u'Has Esps Unselected')+u'   = %s'%bool(converter.espmNots))
             log(u'  *  '+_(u'Has Packages Selected')+u' = %s'%bool(converter.subActives))
-            len_missing = len(converter.bcf_missing_files)
-            log.setHeader(
-                u'. ' + _(u'Contains') + u': %s' % formatInteger(len_missing) +
-                (_(u'file'), _(u'files'))[len_missing > 1])
+            log.setHeader(u'. ' + _(u'Contains: %u file(s)') %
+                          len(converter.bcf_missing_files))
             log(u'  * ' +u'\n  * '.join(sorted(u'%s' % x for x in converter
                                                .bcf_missing_files)))
         if log:
