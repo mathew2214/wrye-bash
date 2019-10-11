@@ -39,17 +39,17 @@
 
 from ctypes import byref, cast, c_bool, c_byte, c_char, c_char_p, c_float, \
     CFUNCTYPE, c_long, c_short, c_ubyte, c_uint32, c_ushort, c_ulong, CDLL, \
-    POINTER, string_at, windll
+    POINTER, string_at
 import math
 import os
 from os.path import exists, join
 try:
     #See if cint is being used by Wrye Bash
-    from bolt import CBash as CBashEnabled
-    from bolt import GPath, deprint, Path
-    from bolt import encode as _enc
-    from bolt import decode as _uni
-    import bolt
+    from .. import bolt
+    from ..bolt import CBash as CBashEnabled
+    from ..bolt import GPath, deprint, Path
+    from ..bolt import encode as _enc
+    from ..bolt import decode as _uni
     def _encode(text,*args,**kwdargs):
         if len(args) > 1:
             args = list(args)
@@ -65,7 +65,7 @@ try:
         else:
             kwdargs['encoding'] = bolt.pluginEncoding
         return _uni(text,*args,**kwdargs)
-except:
+except ImportError:
     #It isn't, so replace the imported items with bare definitions
     CBashEnabled = "."
     class Path(object):
