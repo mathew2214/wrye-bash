@@ -91,7 +91,7 @@ class DocBrowser(BaltFrame):
         main_layout = VBox(main_window, spacing=4, default_grow=True)
         main_layout.add(button_row_sizer)
         main_layout.add(self._doc_name_box)
-        main_layout.add(self._doc_ctrl, weight=3)
+        main_layout.add(self._doc_ctrl.web_viewer, weight=3)
 
         root_window.SplitVertically(mod_list_window, main_window, 250)
         root_layout = VBox(self)
@@ -297,7 +297,6 @@ def _get_mod_checker_setting(key, default=None):
 def _set_mod_checker_setting(key, value):
     bass.settings['bash.modChecker.show{}'.format(key)] = value
 
-
 class ModChecker(BaltFrame):
     """Mod Checker frame."""
     _frame_settings_key = 'bash.modChecker'
@@ -361,7 +360,7 @@ class ModChecker(BaltFrame):
         bottom_row.add(self._buttons[_UPDATE])
         # Main layout
         main_layout = VBox(self, default_grow=True, default_border=4)
-        main_layout.add(self._html_ctrl, weight=1)
+        main_layout.add(self._html_ctrl.web_viewer, weight=1)
         main_layout.add_many(top_row, bottom_row)
         self.CheckMods()
 

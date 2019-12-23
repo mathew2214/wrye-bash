@@ -907,14 +907,14 @@ def showInfo(parent,message,title=_(u'Information'),**kwdargs):
 
 #------------------------------------------------------------------------------
 
-class HtmlCtrl(wx.Window):
+class HtmlCtrl(object):
     @staticmethod
     def html_lib_available(): return bool(_wx_html2)
 
     def __init__(self, parent):
-        super(HtmlCtrl, self).__init__(parent)
+        ctrl = self.web_viewer = wx.Window(parent)
         # init the fallback/plaintext widget
-        self._text_ctrl = RoTextCtrl(self, autotooltip=False)
+        self._text_ctrl = RoTextCtrl(ctrl, autotooltip=False)
         items = [self._text_ctrl]
         def _make_button(bitmap_id, callback):
             return bitmapButton(parent, wx.ArtProvider_GetBitmap(
@@ -922,7 +922,7 @@ class HtmlCtrl(wx.Window):
         self._prev_button = _make_button(wx.ART_GO_BACK, self.go_back)
         self._next_button = _make_button(wx.ART_GO_FORWARD, self.go_forward)
         if _wx_html2:
-            self._html_ctrl = _wx_html2.WebView.New(self)
+            self._html_ctrl = _wx_html2.WebView.New(ctrl)
             self._html_ctrl.Bind(
                 _wx_html2.EVT_WEBVIEW_LOADED,
                 lambda _event: self._update_buttons(enable_html=True))
@@ -931,11 +931,12 @@ class HtmlCtrl(wx.Window):
                 lambda event: self._open_in_external(event.GetURL()))
             items.append(self._html_ctrl)
             self._text_ctrl.Disable()
-        main_layout = VBox(self, default_weight=4, default_grow=True)
+        main_layout = VBox(ctrl, default_weight=4, default_grow=True)
         main_layout.add_many(*items)
         self.switch_to_text() # default to text
 
-    def _open_in_external(self, target_url):
+    @staticmethod
+    def _open_in_external(target_url):
         # We don't support tabs and windows, just open it in the user's browser
         # TODO(inf) just webbrowser.open() instead?
         StartURL(target_url)
@@ -988,11 +989,11 @@ class HtmlCtrl(wx.Window):
     def switch_to_html(self):
         if not _wx_html2: return
         self._update_buttons(enable_html=True)
-        self.Layout()
+        self.web_viewer.Layout()
 
     def switch_to_text(self):
         self._update_buttons(enable_html=False)
-        self.Layout()
+        self.web_viewer.Layout()
 
     def get_buttons(self):
         return self._prev_button, self._next_button
@@ -1096,7 +1097,7 @@ class WryeLog(_Log):
         prev_button, next_button = self._html_ctrl.get_buttons()
         self.window.SetSizer(
             vSizer(
-                (self._html_ctrl,1,wx.EXPAND|wx.ALL^wx.BOTTOM,2),
+                (self._html_ctrl.web_viewer,1,wx.EXPAND|wx.ALL^wx.BOTTOM,2),
                 (hSizer(prev_button, next_button,
                     hspacer,
                     gOkButton,
@@ -1516,9 +1517,18 @@ class Progress(bolt.Progress):
 
     def getParent(self): return self.dialog.GetParent()
 
-    def setCancel(self, enabled=True):
-        cancel = self.dialog.FindWindowById(wx.ID_CANCEL)
-        cancel.Enable(enabled)
+    def setCancel(self, enabled=True, new_message=u''):
+        # TODO(inf) Hacky, we need to rewrite this class for wx3
+        new_title = self.dialog.GetTitle()
+        new_parent = self.dialog.GetParent()
+        new_style = self.dialog.GetWindowStyle()
+        if enabled:
+            new_style |= wx.PD_CAN_ABORT
+        else:
+            new_style &= ~wx.PD_CAN_ABORT
+        self.dialog.Destroy()
+        self.dialog = wx.ProgressDialog(new_title, new_message, 100,
+                                        new_parent, new_style)
 
     def _do_progress(self, state, message):
         if not self.dialog:
@@ -1526,7 +1536,8 @@ class Progress(bolt.Progress):
         elif (state == 0 or state == 1 or (message != self.prevMessage) or
             (state - self.prevState) > 0.05 or (time.time() - self.prevTime) > 0.5):
             if message != self.prevMessage:
-                ret = self.dialog.Update(int(state*100),message)
+                ret = self.dialog.Update(int(state * 100), u'\n'.join(
+                    [self._ellipsize(msg) for msg in message.split(u'\n')]))
             else:
                 ret = self.dialog.Update(int(state*100))
             if not ret[0]:
@@ -1535,8 +1546,26 @@ class Progress(bolt.Progress):
             self.prevState = state
             self.prevTime = time.time()
 
+    @staticmethod
+    def _ellipsize(message):
+        """A really ugly way to ellipsize messages that would cause the
+        progress dialog to resize itself when displaying them. wx2.8's
+        ProgressDialog had this built in, but wx3.0's is native, and doesn't
+        have this feature, so we emulate it here. 50 characters was chosen as
+        the cutoff point, since that produced a reasonably good-looking
+        progress dialog at 1080p during testing.
+
+        :param message: The message to ellipsize.
+        :return: The ellipsized message."""
+        if len(message) > 50:
+            first = message[:24]
+            second = message[-26:]
+            return first + u'...' + second
+        return message
+
     def Destroy(self):
         if self.dialog:
+            # self._do_progress(self.full, _(u'Done'))
             self.dialog.Destroy()
             self.dialog = None
 
