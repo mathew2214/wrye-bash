@@ -23,7 +23,7 @@
 # =============================================================================
 import copy
 import string
-from collections import Counter
+from collections import Counter, defaultdict
 from itertools import chain
 from operator import itemgetter, attrgetter
 # Internal
@@ -638,7 +638,7 @@ class ContentsChecker(_AContentsChecker,Patcher):
             for rec_type in cc_pass[0]:
                 if rec_type not in modFile.tops: continue
                 # Set up a dict to track which entries we have removed per fid
-                id_removed = collections.defaultdict(list)
+                id_removed = defaultdict(list)
                 # Grab the types that are actually valid for our current record
                 # types
                 valid_types = set(self.contType_entryTypes[rec_type])
