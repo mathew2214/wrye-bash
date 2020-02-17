@@ -27,18 +27,17 @@ import struct
 # Set MelModel in brec, in this case it's identical to the fallout 3 one
 from ..fallout3.records import MelOwnership, MelDestructible, MelBipedFlags, \
     MelEffects, MelConditions, MreHasEffects, MelEmbeddedScript
-from ... import brec
 from ...bolt import Flags
 from ...brec import MelModel # set in Mopy/bash/game/fallout3/records.py
 from ...brec import MelRecord, MelGroups, MelStruct, FID, MelGroup, \
-    MelString, MelSet, MelFid, MelNull, MelOptStruct, MelFids, MelBase, \
+    MelString, MelSet, MelFid, MelOptStruct, MelFids, MelBase, \
     MelFidList, MreGmstBase, MreHeaderBase, MelUnicode, MelColorInterpolator, \
     MelValueInterpolator, MelRegnEntrySubrecord, MelFloat, MelSInt8, \
     MelSInt16, MelSInt32, MelUInt8, MelUInt32, MelOptFid, MelOptFloat, \
     MelOptSInt32, MelOptUInt8, MelOptUInt16, MelOptUInt32, MelBounds, null1, \
     null2, null3, null4, MelTruncatedStruct, MelReadOnly, MelCoordinates, \
     MelIcons, MelIcons2, MelIcon, MelIco2, MelEdid, MelFull, MelArray, \
-    MelObject
+    MelObject, MreDialBase
 from ...exception import ModSizeError
 
 #------------------------------------------------------------------------------
@@ -613,7 +612,7 @@ class MreDehy(MelRecord):
     __slots__ = melSet.getSlotsUsed()
 
 #------------------------------------------------------------------------------
-class MreDial(brec.MreDial):
+class MreDial(MreDialBase):
     """Dialogue."""
     _DialFlags = Flags(0, Flags.getNames('rumors', 'toplevel', ))
 
