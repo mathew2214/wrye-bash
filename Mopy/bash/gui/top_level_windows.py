@@ -212,7 +212,7 @@ class WizardDialog(DialogWindow, WithFirstShow):
         super(WizardDialog, self).__init__(parent, **kwargs)
         self.on_wiz_page_change = self._evt_handler(
             _wiz.EVT_WIZARD_PAGE_CHANGING,
-            lambda event: [event.GetDirection(), event.GetPage()])
+            lambda event: [event.GetDirection(), self.parser.page])
         # needed to correctly save size/pos, on_closing seems not enough
         self._on_wiz_cancel = self._evt_handler(_wiz.EVT_WIZARD_CANCEL)
         self._on_wiz_cancel.subscribe(self.save_size)
@@ -303,3 +303,9 @@ class NotebookCtrl(_AComponent):
 
     def nb_set_selected_index(self, page_index):
         self._native_widget.SetSelection(page_index)
+
+# Wizard stuff to go with WizardDialog  ---------------------------------------
+class WizPage(PanelWin):
+    def __init__(self, parent):
+        # call _AComponent init
+        super(PanelWin, self).__init__(_wiz.PyWizardPage, parent)
