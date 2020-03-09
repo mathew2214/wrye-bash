@@ -3321,13 +3321,12 @@ class PeopleDetails(_DetailsMixin, NotebookPanel):
 
     def ClosePanel(self, destroy=False):
         """Saves details if they need saving."""
-        if not self.gText.modified: return
-        if not self.file_info: return
-        mtime, karma, __text = self.file_infos[self._people_detail]
-        self.file_infos[self._people_detail] = (
-            time.time(), karma, self.gText.text_content.strip())
-        self.peoplePanel.uiList.PopulateItem(item=self._people_detail)
-        self.file_infos.setChanged()
+        if self.gText.modified and self.file_info:
+            mtime, karma, __text = self.file_infos[self._people_detail]
+            self.file_infos[self._people_detail] = (
+                time.time(), karma, self.gText.text_content.strip())
+            self.peoplePanel.uiList.PopulateItem(item=self._people_detail)
+            self.file_infos.setChanged()
 
     def SetFile(self, fileName='SAME'):
         """Refreshes detail view associated with data from item."""

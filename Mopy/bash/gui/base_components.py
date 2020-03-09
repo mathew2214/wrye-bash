@@ -310,6 +310,7 @@ class WithMouseEvents(_AComponent):
     bind_lclick_down = False
     bind_lclick_up = False
     bind_mouse_leaving = False
+    bind_mouse_capture_lost = False
 
     class _WrapMouseEvt(object):
         def __init__(self, mouse_evt):
@@ -348,12 +349,17 @@ class WithMouseEvents(_AComponent):
             self.on_mouse_left_down = self._evt_handler(_wx.EVT_LEFT_DOWN,
                 lambda event: [self._WrapMouseEvt(event),
                                lb_hit_test(event)[0]])
+        if self.__class__.bind_lclick_up:
+            self.on_mouse_left_up = self._evt_handler(_wx.EVT_LEFT_UP)
         if self.__class__.bind_motion:
             self.on_mouse_motion = self._evt_handler(_wx.EVT_MOTION,
                 lambda event: [self._WrapMouseEvt(event),
                                lb_hit_test(event)[0]])
         if self.__class__.bind_mouse_leaving:
             self.on_mouse_leaving = self._evt_handler(_wx.EVT_LEAVE_WINDOW)
+        if self.__class__.bind_mouse_capture_lost:
+            self.on_mouse_capture_lost = self._evt_handler(
+                _wx.EVT_MOUSE_CAPTURE_LOST)
 
 class WithCharEvents(_AComponent):
     """An _AComponent that handles key presses events.
