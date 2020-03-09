@@ -48,8 +48,7 @@ import wx.lib.newevent
 from .gui import Button, CancelButton, CheckBox, HBoxedLayout, HLayout, \
     Label, LayoutOptions, OkButton, RIGHT, Stretch, TextArea, TOP, VLayout, \
     web_viewer_available, DialogWindow, WindowFrame, EventResult, ListBox, \
-    Font, CheckListBox, UIListCtrl, PanelWin, Color, Colors, HtmlDisplay, \
-    WithFirstShow
+    Font, CheckListBox, UIListCtrl, PanelWin, Color, Colors, HtmlDisplay
 from .gui.base_components import _AComponent
 
 # Print a notice if wx.html2 is missing
@@ -2527,7 +2526,7 @@ class WryeBashSplashScreen(wx.SplashScreen):
         event.Skip() # Make sure the default handler runs too...
 
 #------------------------------------------------------------------------------
-class NotebookPanel(WithFirstShow, PanelWin):
+class NotebookPanel(PanelWin):
     """Parent class for notebook panels."""
     # UI settings keys prefix - used for sashPos and uiList gui settings
     keyPrefix = 'OVERRIDE'
