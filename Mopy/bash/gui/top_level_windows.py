@@ -301,5 +301,8 @@ class NotebookCtrl(_AComponent):
 
     def nb_get_selected_index(self): return self._native_widget.GetSelection()
 
-    def nb_set_selected_index(self, page_index):
+    def nb_select_page_at_index(self, page_index):
         self._native_widget.SetSelection(page_index)
+
+    def nb_get_page_count(self):
+        return self._native_widget.GetPageCount()

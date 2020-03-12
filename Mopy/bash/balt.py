@@ -870,13 +870,13 @@ class TabDragMixin(WithMouseEvents):
                 else:
                     left,right,step = oldPos+1,newPos+1,-1
                 insert = left+step
-                addPages = [(self.GetPage(x),self.GetPageText(x)) for x in range(left,right)]
+                addPages = [(self._native_widget.GetPage(x),self._native_widget.GetPageText(x)) for x in range(left,right)]
                 addPages.reverse()
                 num = right - left
                 for i in range(num):
-                    self.RemovePage(left)
+                    self._native_widget.RemovePage(left)
                 for page,title in addPages:
-                    self.InsertPage(insert,page,title)
+                    self._native_widget.InsertPage(insert,page,title)
                 evt = NoteBookDraggedEvent(fromIndex=oldPos,toIndex=newPos)
                 wx.PostEvent(self,evt)
 
@@ -2419,7 +2419,7 @@ class DnDStatusBar(wx.StatusBar):
     def _getButtonIndex(self, mouseEvent):
         id_ = mouseEvent.GetId()
         for i, button in enumerate(self.buttons):
-            if button.wx_id_ == id_:
+            if button.wx_id_() == id_:
                 x = mouseEvent.GetPosition()[0]
                 # position is 0 at the beginning of the button's _icon_
                 # negative beyond that (on the left) and positive after

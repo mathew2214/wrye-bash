@@ -284,7 +284,6 @@ class _AComponent(object):
         all possible."""
         self._native_widget.Destroy()
 
-    @property
     def wx_id_(self): # avoid, we do not want to program with gui ids
         return self._native_widget.GetId()
 
