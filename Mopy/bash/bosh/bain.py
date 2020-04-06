@@ -1244,7 +1244,7 @@ class InstallerArchive(Installer):
             u'No files to extract for %s.' % self.archive)
         # expand wildcards in fileNames to get actual count of files to extract
         #--Dump file list
-        with self.tempList.open('w',encoding='utf8') as out:
+        with self.tempList.open(u'w',encoding='utf8') as out:
             out.write(u'\n'.join(fileNames))
         #--Ensure temp dir empty
         bass.rmTempDir()
@@ -1550,7 +1550,7 @@ class InstallerProject(Installer):
         project = outDir.join(project)
         with project.unicodeSafe() as projectDir:
             #--Dump file list
-            with self.tempList.open('w',encoding='utf-8-sig') as out:
+            with self.tempList.open(u'w',encoding='utf-8-sig') as out:
                 if release:
                     out.write(u'*thumbs.db\n')
                     out.write(u'*desktop.ini\n')
@@ -2315,7 +2315,7 @@ class InstallersData(DataStore):
                 tweakPath.remove()
                 continue
             # Re-write the tweak
-            with tweakPath.open('w') as ini_:
+            with tweakPath.open(u'w') as ini_:
                 ini_.write(u'; INI Tweak created by Wrye Bash, using settings '
                           u'from old file.\n\n')
                 ini_.writelines(lines)
