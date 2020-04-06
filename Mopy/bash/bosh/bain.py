@@ -1244,7 +1244,7 @@ class InstallerArchive(Installer):
             u'No files to extract for %s.' % self.archive)
         # expand wildcards in fileNames to get actual count of files to extract
         #--Dump file list
-        with self.tempList.open(u'w',encoding='utf8') as out:
+        with self.tempList.open(u'w',encoding=u'utf8') as out:
             out.write(u'\n'.join(fileNames))
         #--Ensure temp dir empty
         bass.rmTempDir()
@@ -1550,7 +1550,7 @@ class InstallerProject(Installer):
         project = outDir.join(project)
         with project.unicodeSafe() as projectDir:
             #--Dump file list
-            with self.tempList.open(u'w',encoding='utf-8-sig') as out:
+            with self.tempList.open(u'w',encoding=u'utf-8-sig') as out:
                 if release:
                     out.write(u'*thumbs.db\n')
                     out.write(u'*desktop.ini\n')
