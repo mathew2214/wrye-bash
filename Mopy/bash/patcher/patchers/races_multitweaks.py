@@ -827,6 +827,7 @@ class RacePatcher(AMultiTweaker, ListPatcher):
                     GPath(u'Oblivion.esm'), 0x038010) and not reProcess.search(
                     npc.full): continue
             raceEyes = final_eyes.get(npc.race)
+            random.seed(npc.fid[1]) # make it deterministic
             if not npc.eye and raceEyes:
                 npc.eye = random.choice(raceEyes)
                 srcMod = npc.fid[0]
@@ -1342,6 +1343,7 @@ class CBash_RacePatcher_Eyes(_CBashOnlyRacePatchers):
                 #IsNewest
                 if npc.IsWinning():
                     npcChanged = False
+                    random.seed(recordId[1]) # make it deterministic
                     raceEyes = final_eyes.get(raceId)
                     eye = npc.eye
                     if eye is None and raceEyes:
