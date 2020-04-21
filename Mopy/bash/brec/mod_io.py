@@ -60,7 +60,7 @@ class RecordHeader(object):
     pack_formats.update({x: u'=4sIi3I' for x in {2, 3}})  #Interior Cell Blocks
     pack_formats.update({x: u'=4sIhh3I' for x in {4, 5}}) #Exterior Cell Blocks
     #--Top types in order of the main ESM
-    topTypes = []
+    top_grup_sigs = []
     #--Record Types: all recognized record types (not just the top types)
     valid_header_sigs = set()
     #--Plugin form version, we must pack this in the TES4 header
@@ -169,7 +169,7 @@ def unpack_header(ins, __rh=RecordHeader):
     #--Top Group
     elif args[3] == 0: #groupType == 0 (Top Type)
         str0 = struct_pack('I', args[2])
-        if str0 in __rh.topTypes:
+        if str0 in __rh.top_grup_sigs:
             args = list(args)
             args[2] = str0
         else:
