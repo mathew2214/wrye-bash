@@ -301,7 +301,7 @@ class SkyrimGameInfo(GameInfo):
             b'SNCT', b'SOPM', b'COLL', b'CLFM', b'REVB',
         ]
         #-> this needs updating for Skyrim
-        header_type.recordTypes = set(
+        header_type.valid_header_sigs = set(
             header_type.topTypes + [b'GRUP', b'TES4', b'REFR', b'ACHR',
                                     b'ACRE', b'LAND', b'INFO', b'NAVM',
                                     b'PHZD', b'PGRE'])

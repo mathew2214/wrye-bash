@@ -62,7 +62,7 @@ class RecordHeader(object):
     #--Top types in order of the main ESM
     topTypes = []
     #--Record Types: all recognized record types (not just the top types)
-    recordTypes = set()
+    valid_header_sigs = set()
     #--Plugin form version, we must pack this in the TES4 header
     plugin_form_version = 0
     __slots__ = (u'recType', u'size', u'extra')
@@ -159,7 +159,7 @@ def unpack_header(ins, __rh=RecordHeader):
     args = ins.unpack(__rh.header_unpack, __rh.rec_header_size, 'REC_HEADER')
     #--Bad type?
     header_sig = args[0]
-    if header_sig not in __rh.recordTypes:
+    if header_sig not in __rh.valid_header_sigs:
         raise exception.ModError(ins.inName,
                                  u'Bad header type: %r' % header_sig.decode(
                                      'ascii'))

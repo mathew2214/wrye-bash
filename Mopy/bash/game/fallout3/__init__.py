@@ -334,7 +334,7 @@ class Fallout3GameInfo(GameInfo):
             b'AVIF', b'RADS', b'CAMS', b'CPTH', b'VTYP', b'IPCT', b'IPDS',
             b'ARMA', b'ECZN', b'MESG', b'RGDL', b'DOBJ', b'LGTM', b'MUSC',
         ]
-        header_type.recordTypes = set(
+        header_type.valid_header_sigs = set(
             header_type.topTypes + [b'GRUP', b'TES4', b'ACHR', b'ACRE',
                                     b'INFO', b'LAND', b'NAVM', b'PGRE',
                                     b'PMIS', b'REFR'])

@@ -184,7 +184,7 @@ class FalloutNVGameInfo(Fallout3GameInfo):
             b'CHAL', b'AMEF', b'CCRD', b'CMNY', b'CDCK', b'DEHY', b'HUNG',
             b'SLPD', b'CELL', b'WRLD',
         ]
-        header_type.recordTypes = set(
+        header_type.valid_header_sigs = set(
             header_type.topTypes + [b'GRUP', b'TES4', b'ACHR', b'ACRE',
                                     b'INFO', b'LAND', b'NAVM', b'PGRE',
                                     b'PMIS', b'REFR'])

@@ -293,7 +293,7 @@ class OblivionGameInfo(GameInfo):
             b'CLMT', b'REGN', b'CELL', b'WRLD', b'DIAL', b'QUST', b'IDLE',
             b'PACK', b'CSTY', b'LSCR', b'LVSP', b'ANIO', b'WATR', b'EFSH',
         ]
-        header_type.recordTypes = set(
+        header_type.valid_header_sigs = set(
             header_type.topTypes + [b'GRUP', b'TES4', b'ROAD', b'REFR',
                                     b'ACHR', b'ACRE', b'PGRD', b'LAND',
                                     b'INFO'])

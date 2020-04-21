@@ -180,7 +180,7 @@ class Fallout4GameInfo(GameInfo):
             b'INNR', b'KSSM', b'AECH', b'SCCO', b'AORU', b'SCSN', b'STAG',
             b'NOCM', b'LENS', b'GDRY', b'OVIS',
         ]
-        header_type.recordTypes = (set(header_type.topTypes) |
+        header_type.valid_header_sigs = (set(header_type.topTypes) |
             {b'GRUP', b'TES4', b'REFR', b'ACHR', b'PMIS', b'PARW', b'PGRE',
              b'PBEA', b'PFLA', b'PCON', b'PBAR', b'PHZD', b'LAND', b'NAVM',
              b'DIAL', b'INFO'})

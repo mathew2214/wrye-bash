@@ -572,7 +572,7 @@ class GameInfo(object):
         # Top types in order of the main ESM
         header_type = brec.RecordHeader
         header_type.topTypes = []
-        header_type.recordTypes = set(
+        header_type.valid_header_sigs = set(
             header_type.topTypes + [b'GRUP', b'TES4'])
         # Record Types
         brec.MreRecord.type_class = dict((x.classType,x) for x in  (

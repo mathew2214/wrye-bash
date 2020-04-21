@@ -143,7 +143,7 @@ class SkyrimSEGameInfo(SkyrimGameInfo):
             'SCEN', 'ASTP', 'OTFT', 'ARTO', 'MATO', 'MOVT', 'SNDR', 'DUAL',
             'SNCT', 'SOPM', 'COLL', 'CLFM', 'REVB', 'LENS', 'VOLI']
         #-> this needs updating for Skyrim
-        header_type.recordTypes = set(
+        header_type.valid_header_sigs = set(
             header_type.topTypes + ['GRUP', 'TES4', 'REFR', 'ACHR', 'ACRE',
                                     'LAND', 'INFO', 'NAVM', 'PHZD', 'PGRE'])
         header_type.plugin_form_version = 44
