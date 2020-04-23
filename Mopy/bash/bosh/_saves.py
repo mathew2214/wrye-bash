@@ -302,7 +302,7 @@ class SaveFile(object):
             createdNum = unpack_int(ins)
             for count in xrange(createdNum):
                 progress(ins.tell(),_(u'Reading created...'))
-                self.created.append(MreRecord(unpack_header(ins), modReader))
+                self.created.append(MreRecord(unpack_header(modReader), modReader))
             #--Pre-records: Quickkeys, reticule, interface, regions
             with sio() as buff:
                 for count in range(4):
