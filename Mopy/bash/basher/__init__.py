@@ -2067,8 +2067,13 @@ class SaveDetails(_ModsSavesDetails):
         self.gCoSaves.label_text = self.coSaves
         self.uilist.SetFileInfo(self.saveInfo)
         #--Picture
-        image_tuple = self.saveInfo.header.image if self.saveInfo else None
-        self.picture.set_bitmap(image_tuple)
+        ss_width, ss_height, ss_data = self.saveInfo.header.image
+        wx_depth = (32 if self.saveInfo.header.has_alpha else 24)
+        wx_fmt = (wx.BitmapBufferFormat_RGBA if self.saveInfo.header.has_alpha
+                  else wx.BitmapBufferFormat_RGB)
+        bm = wx.Bitmap(ss_width, ss_height, wx_depth)
+        bm.CopyFromBuffer(ss_data, wx_fmt)
+        self.picture.set_bitmap(bm)
         #--Info Box
         self.gInfo.modified = False
         note_text = bosh.saveInfos.table.getItem(fileName, 'info',
