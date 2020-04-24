@@ -50,7 +50,7 @@ from .. import patcher # for configIsCBash()
 from ..archives import readExts
 from ..bass import dirs, inisettings, tooldirs
 from ..bolt import GPath, DataDict, deprint, sio, Path, decode, struct_pack, \
-    struct_unpack, AFile
+    struct_unpack, AFile, GPath_NoNorm
 from ..brec import MreRecord, ModReader, RecordHeader
 from ..cint import CBashApi
 from ..exception import AbstractError, ArgumentError, BoltError, BSAError, \
@@ -1103,7 +1103,7 @@ class SaveInfo(FileInfo):
             if xse_cosave is not None: # the cached cosave should be valid
                 # Make sure the cosave's masters are actually useful
                 if xse_cosave.has_accurate_master_list(has_esl=True):
-                    return [GPath(master) for master in
+                    return [GPath_NoNorm(master) for master in
                             xse_cosave.get_master_list()]
         # Fall back on the regular masters - either the cosave is unnecessary,
         # doesn't exist or isn't accurate

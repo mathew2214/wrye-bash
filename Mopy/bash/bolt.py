@@ -375,8 +375,8 @@ _gpaths = {}
 
 def GPath(name):
     """Path factory and cache.
-    :rtype: Path
-    """
+
+    :rtype: Path"""
     if name is None: return None
     elif isinstance(name,Path): norm = name._s
     elif not name: norm = name # empty string - bin this if ?
@@ -385,6 +385,19 @@ def GPath(name):
     path = _gpaths.get(norm)
     if path is not None: return path
     else: return _gpaths.setdefault(norm,Path(norm))
+
+def GPath_NoNorm(name):
+    """Alternative to GPath that does not call normpath. It is up to the caller
+    to ensure that the invariant name == os.path.normpath(name) holds for all
+    values pased into this method.
+
+    :rtype: Path"""
+    if name is None: return None
+    elif isinstance(name,Path): name = name._s
+    elif isinstance(name, bytes): name = decode(name)
+    path = _gpaths.get(name)
+    if path is not None: return path
+    else: return _gpaths.setdefault(name, Path(name))
 
 def GPathPurge():
     """Cleans out the _gpaths dictionary of any unused bolt.Path objects.
