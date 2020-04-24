@@ -4181,11 +4181,17 @@ class BashApp(wx.App):
         bosh.modInfos = bosh.ModInfos()
         bosh.modInfos.refresh(booting=True)
         progress(0.50, _(u'Initializing SaveInfos'))
-        from pympler.tracker import SummaryTracker
-        tracker = SummaryTracker()
+        import cProfile, pstats
+        pr = cProfile.Profile()
+        pr.enable()
         bosh.saveInfos = bosh.SaveInfos()
         bosh.saveInfos.refresh(booting=True)
-        tracker.print_diff()
+        pr.disable()
+        s = StringIO.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        deprint(s.getvalue())
         progress(0.60, _(u'Initializing IniInfos'))
         bosh.iniInfos = bosh.INIInfos()
         bosh.iniInfos.refresh(refresh_target=False)
