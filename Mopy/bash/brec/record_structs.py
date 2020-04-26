@@ -27,7 +27,9 @@ subrecords in memory."""
 from __future__ import division, print_function
 import copy
 import zlib
+from functools import partial
 
+from . import MelBase, Subrecord
 from .mod_io import ModReader, ModWriter
 from .utils_constants import strFid, _int_unpacker
 from .. import bolt, exception
@@ -69,7 +71,7 @@ class MelSet(object):
         loaders = self.loaders
         # Load each subrecord
         ins_at_end = ins.atEnd
-        load_sub_header = ins.unpackSubHeader
+        load_sub_header = partial(MelBase.unpackSubHeader, ins)
         read_id_prefix = rec_type + '.'
         while not ins_at_end(endPos, rec_type):
             sub_type, sub_size = load_sub_header(rec_type)
@@ -158,50 +160,7 @@ class MelSet(object):
         return self
 
 #------------------------------------------------------------------------------
-# Subrecords and records ------------------------------------------------------
-class MreSubrecord(object):
-    """Generic Subrecord."""
-    def __init__(self,type,size,ins=None):
-        self.changed = False
-        self.subType = type
-        self.size = size
-        self.data = None
-        self.inName = ins and ins.inName
-        if ins: self.load(ins)
-
-    def load(self,ins):
-        self.data = ins.read(self.size,'----.'+self.subType)
-
-    def setChanged(self,value=True):
-        """Sets changed attribute to value. [Default = True.]"""
-        self.changed = value
-
-    def setData(self,data):
-        """Sets data and size."""
-        self.data = data
-        self.size = len(data)
-
-    def getSize(self):
-        """Return size of self.data, after, if necessary, packing it."""
-        if not self.changed: return self.size
-        #--StringIO Object
-        with ModWriter(sio()) as out:
-            self.dumpData(out)
-            #--Done
-            self.data = out.getvalue()
-        self.size = len(self.data)
-        self.setChanged(False)
-        return self.size
-
-    def dumpData(self,out):
-        """Dumps state into out. Called by getSize()."""
-        raise exception.AbstractError
-
-    def dump(self,out):
-        if self.changed: raise exception.StateError(u'Data changed: ' + self.subType)
-        if not self.data: raise exception.StateError(u'Data undefined: ' + self.subType)
-        out.packSub(self.subType,self.data)
-
+# Records ---------------------------------------------------------------------
 #------------------------------------------------------------------------------
 class MreRecord(object):
     """Generic Record. flags1 are game specific see comments."""
@@ -408,11 +367,11 @@ class MreRecord(object):
         with self.getReader() as reader:
             _rec_sig_ = self.recType
             readAtEnd = reader.atEnd
-            readSubHeader = reader.unpackSubHeader
+            readSubHeader = partial(MelBase.unpackSubHeader, reader)
             subAppend = self.subrecords.append
             while not readAtEnd(reader.size,_rec_sig_):
-                (type,size) = readSubHeader(_rec_sig_)
-                subAppend(MreSubrecord(type,size,reader))
+                (mel_type, mel_size) = readSubHeader(_rec_sig_)
+                subAppend(Subrecord(mel_type, mel_size, reader))
 
     def convertFids(self,mapper,toLong):
         """Converts fids between formats according to mapper.
@@ -499,7 +458,7 @@ class MreRecord(object):
             with self.getReader() as reader:
                 _rec_sig_ = self.recType
                 readAtEnd = reader.atEnd
-                readSubHeader = reader.unpackSubHeader
+                readSubHeader = partial(MelBase.unpackSubHeader, reader)
                 readSeek = reader.seek
                 readRead = reader.read
                 while not readAtEnd(reader.size,_rec_sig_):

@@ -34,11 +34,11 @@ __author__ = u'Infernio'
 import copy
 import struct
 from collections import OrderedDict
+from itertools import chain
 
 from .basic_elements import MelBase, MelNull, MelObject, MelStruct
-from .mod_io import ModWriter
 from .. import exception
-from ..bolt import sio, struct_pack
+from ..bolt import struct_pack
 
 #------------------------------------------------------------------------------
 class _MelDistributor(MelNull):
@@ -348,20 +348,6 @@ class MelArray(MelBase):
         except exception.AbstractError:
             raise SyntaxError(u'MelArray preludes must have a static size')
 
-    class _DirectModWriter(ModWriter):
-        """ModWriter that does not write out any subrecord headers."""
-        def packSub(self, sub_rec_type, data, *values):
-            if data is None: return
-            if values: data = struct_pack(data, *values)
-            self.out.write(data)
-
-        def packSub0(self, sub_rec_type, data):
-            self.out.write(data)
-            self.out.write('\x00')
-
-        def packRef(self, sub_rec_type, fid):
-            if fid is not None: self.pack('I', fid)
-
     def getSlotsUsed(self):
         slots_ret = self._prelude.getSlotsUsed() if self._prelude else ()
         return super(MelArray, self).getSlotsUsed() + slots_ret
@@ -402,21 +388,17 @@ class MelArray(MelBase):
             arr_entry.__slots__ = entry_slots
             load_entry(arr_entry, ins, sub_type, entry_size, readId)
 
-    def dumpData(self, record, out):
-        array_data = self._collect_array_data(record)
-        if array_data: out.packSub(self.subType, array_data)
-
-    def _collect_array_data(self, record):
+    def pack_subrecord_data(self, record):
         """Collects the actual data that will be dumped out."""
-        array_data = MelArray._DirectModWriter(sio())
-        if self._prelude:
-            self._prelude.dumpData(record, array_data)
         array_val = getattr(record, self.attr)
-        if not array_val: return b'' # don't dump out empty arrays
-        dump_entry = self._element.dumpData
-        for arr_entry in array_val:
-            dump_entry(arr_entry, array_data)
-        return array_data.getvalue()
+        if not array_val: return None # don't dump out empty arrays
+        if self._prelude:
+            sub_data = self._prelude.pack_subrecord_data(record)
+        else:
+            sub_data = b''
+        sub_data += b''.join([self._element.pack_subrecord_data(arr_entry)
+                              for arr_entry in array_val])
+        return sub_data
 
 #------------------------------------------------------------------------------
 class MelTruncatedStruct(MelStruct):
@@ -476,7 +458,7 @@ class MelTruncatedStruct(MelStruct):
         unpacked_val."""
         return unpacked_val + self.defaults[len(unpacked_val):]
 
-    def dumpData(self, record, out):
+    def pack_subrecord_data(self, record):
         if self._is_optional:
             # If this struct is optional, compare the current values to the
             # defaults and skip the dump conditionally - basically the same
@@ -485,10 +467,9 @@ class MelTruncatedStruct(MelStruct):
             for attr, default in zip(self.attrs, self.defaults):
                 curr_val = record_get_attr(attr)
                 if curr_val is not None and curr_val != default:
-                    break
-            else:
-                return
-        MelStruct.dumpData(self, record, out)
+                    return super(MelTruncatedStruct, self).pack_subrecord_data(
+                        record)
+            return None
 
     @property
     def static_size(self):
@@ -510,14 +491,11 @@ class MelVector(MelStruct):
         for attr, _slice in self.__class__._attr_indexes.iteritems():
             setter(attr, unpacked[_slice])
 
-    def dumpData(self,record,out):
-        recordGetAttr = record.__getattribute__
-        values = []
-        for rattr, _slice in self.__class__._attr_indexes.iteritems():
-            attr_val = recordGetAttr(rattr)
-            values.append(attr_val) if isinstance(_slice, int) else \
-                values.extend(attr_val)
-        out.packSub(self.subType, self.struct_format, *values)
+    def pack_subrecord_data(self, record):
+        values = list(chain.from_iterable(
+            j if isinstance(j, list) else [j] for j in
+            map(record.__getattribute__, self.__class__._attr_indexes)))
+        return struct_pack(self.struct_format, *values)
 
 #------------------------------------------------------------------------------
 # Unions and Deciders

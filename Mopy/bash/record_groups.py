@@ -30,7 +30,7 @@ from itertools import chain
 from operator import itemgetter, attrgetter
 # Wrye Bash imports
 from .brec import ModReader, RecordHeader, GrupHeader, TopGrupHeader
-from .bolt import sio
+from .bolt import sio, struct_pack
 from . import bush # for fallout3/nv fsName
 from .exception import AbstractError, ArgumentError, ModError
 
@@ -1097,7 +1097,7 @@ class MobWorlds(MobBase):
             totalSize = RecordHeader.rec_header_size + sum(
                 x.dump(out) for x in self.worldBlocks)
             out.seek(worldHeaderPos + 4)
-            out.pack(u'I', totalSize)
+            out.write(struct_pack(u'I', totalSize))
             out.seek(worldHeaderPos + totalSize)
 
     def getNumRecords(self,includeGroups=True):

@@ -30,7 +30,7 @@ from ._mergeability import is_esl_capable
 from .loot_parser import libloot_version, LOOTParser
 from .. import balt, bolt, bush, bass, load_order
 from ..bolt import GPath, deprint, sio, struct_pack, struct_unpack
-from ..brec import ModReader, MreRecord, RecordHeader
+from ..brec import ModReader, MreRecord, RecordHeader, MelBase
 from ..cint import ObBaseRecord, ObCollection
 from ..exception import BoltError, CancelError, ModError
 
@@ -530,7 +530,7 @@ class ModCleaner(object):
                         insAtEnd = ins.atEnd
                         insTell = ins.tell
                         insUnpackRecHeader = ins.unpackRecHeader
-                        insUnpackSubHeader = ins.unpackSubHeader
+                        insUnpackSubHeader = partial(MelBase.unpackSubHeader, ins)
                         insRead = ins.read
                         ins_unpack = partial(ins.unpack, __unpacker)
                         headerSize = RecordHeader.rec_header_size
@@ -606,11 +606,11 @@ class ModCleaner(object):
                                         record.loadSubrecords()
                                         eid = u''
                                         for subrec in record.subrecords:
-                                            if subrec.subType == 'EDID':
-                                                eid = bolt.decoder(subrec.data)
-                                            elif subrec.subType == 'XCLC':
+                                            if subrec.mel_sig == 'EDID':
+                                                eid = bolt.decoder(subrec.mel_data)
+                                            elif subrec.mel_sig == 'XCLC':
                                                 pos = struct_unpack(
-                                                    '=2i', subrec.data[:8])
+                                                    '=2i', subrec.mel_data[:8])
                                         for udrFid in parents_to_scan[fid]:
                                             if rtype == 'CELL':
                                                 udr[udrFid].parentEid = eid
@@ -671,13 +671,13 @@ class NvidiaFogFixer(object):
                     elif type == 'CELL':
                         nextRecord = ins.tell() + size
                         while ins.tell() < nextRecord:
-                            (type,size) = ins.unpackSubHeader()
+                            mel_sig, mel_size = MelBase.unpackSubHeader(ins)
                             copyPrev(6)
-                            if type != 'XCLL':
-                                copy(size)
+                            if mel_sig != 'XCLL':
+                                copy(mel_size)
                             else:
                                 color, near, far, rotXY, rotZ, fade, clip = \
-                                    ins_unpack(size, 'CELL.XCLL')
+                                    ins_unpack(mel_size, 'CELL.XCLL')
                                 if not (near or far or clip):
                                     near = 0.0001
                                     fixedCells.add(header.fid)
@@ -737,8 +737,8 @@ class ModDetails(object):
                     nextRecord = ins.tell() + rec_siz
                     recs, endRecs = getRecordReader(header.flags1, rec_siz)
                     while recs.tell() < endRecs:
-                        (recType, rec_siz) = recs.unpackSubHeader()
-                        if recType == 'EDID':
+                        (mel_sig, rec_siz) = MelBase.unpackSubHeader(recs)
+                        if mel_sig == 'EDID':
                             eid = recs.readString(rec_siz)
                             break
                         recs.seek(rec_siz, 1)
