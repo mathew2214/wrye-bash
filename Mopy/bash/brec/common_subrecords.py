@@ -26,6 +26,7 @@ definitions for some commonly needed subrecords."""
 
 from __future__ import division, print_function
 from collections import defaultdict
+from itertools import chain
 
 from .advanced_elements import AttrValDecider, MelArray, MelTruncatedStruct, \
     MelUnion, PartialLoadDecider
@@ -153,7 +154,7 @@ class MelCtda(MelUnion):
         formElements.add(self)
 
     def getLoaders(self, loaders):
-        loaders[next(self.element_mapping.itervalues()).subType] = self
+        loaders[next(self.element_mapping.itervalues()).mel_sig] = self
 
     def getSlotsUsed(self):
         return (self.decider_result_attr,) + next(
@@ -367,7 +368,7 @@ class MelRaceParts(MelNull):
     def dumpData(self, record, out):
         for part_indx, part_attr in self._indx_to_attr.iteritems():
             if hasattr(record, part_attr): # only dump present parts
-                out.packSub('INDX', '=I', part_indx)
+                MelUInt32('INDX', '').packSub(out, struct_pack(u'=I', part_attr))
                 self._indx_to_loader[part_indx].dumpData(record, out)
 
     @property
@@ -423,16 +424,13 @@ class MelMODS(MelBase):
             dataAppend((string,fid,index))
         record.__setattr__(self.attr,data)
 
-    def dumpData(self,record,out):
+    def pack_subrecord_data(self,record):
         data = record.__getattribute__(self.attr)
         if data is not None:
-            data = record.__getattribute__(self.attr)
-            outData = struct_pack('I', len(data))
-            for (string,fid,index) in data:
-                outData += struct_pack('I', len(string))
-                outData += encode(string)
-                outData += struct_pack('=2I', fid, index)
-            out.packSub(self.subType,outData)
+            return b''.join(chain([struct_pack(u'I', len(data))],
+                *([struct_pack(u'I', len(string)), encode(string),
+                   struct_pack(u'=2I', fid, index)]
+                  for (string, fid, index) in data)))
 
     def mapFids(self,record,function,save=False):
         attr = self.attr
