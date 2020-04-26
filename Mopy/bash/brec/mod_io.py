@@ -285,8 +285,12 @@ class ModReader(object):
 
     def readString(self,size,recType='----'):
         """Read string from file, stripping zero terminator."""
+        # byte_str = self.read(size,recType).rstrip(b'\x00')
+        byte_str = self.read(size -  1,recType)
+        self.ins.seek(1, 1) # discard null?
+        ##: why we split and then join?
         return u'\n'.join(decoder(x,bolt.pluginEncoding,avoidEncodings=('utf8','utf-8')) for x in
-                          bolt.cstrip(self.read(size,recType)).split('\n'))
+                          byte_str.split('\n'))
 
     def readStrings(self,size,recType='----'):
         """Read strings from file, stripping zero terminator."""
