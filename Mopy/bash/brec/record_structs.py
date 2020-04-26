@@ -30,7 +30,7 @@ import zlib
 from functools import partial
 
 from . import Subrecord, unpackSubHeader
-from .mod_io import ModReader, ModWriter
+from .mod_io import ModReader
 from .utils_constants import strFid, _int_unpacker
 from .. import bolt, exception
 from ..bolt import decoder, sio, struct_pack
@@ -391,7 +391,7 @@ class MreRecord(object):
             u'Packing Error: %s %s: Fids in long format.'
             % (self.recType,self.fid))
         #--Pack data and return size.
-        with ModWriter(sio()) as out:
+        with sio() as out:
             self.dumpData(out)
             self.data = out.getvalue()
         if self.flags1.compressed:

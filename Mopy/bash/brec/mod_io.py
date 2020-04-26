@@ -31,7 +31,7 @@ import struct
 # no local imports beyond this, imported everywhere in brec
 from .utils_constants import _int_unpacker, null1, strFid
 from .. import bolt, exception
-from ..bolt import decoder, encode, struct_pack, struct_unpack
+from ..bolt import decoder, struct_pack, struct_unpack
 
 #------------------------------------------------------------------------------
 # Headers ---------------------------------------------------------------------
@@ -307,20 +307,3 @@ class ModReader(object):
 
     def unpackRecHeader(self, __head_unpack=unpack_header):
         return __head_unpack(self)
-
-#------------------------------------------------------------------------------
-class ModWriter(object):
-    """Wrapper around a TES4 output stream.  Adds utility functions."""
-    def __init__(self,out):
-        self.out = out
-
-    # with statement
-    def __enter__(self): return self
-    def __exit__(self, exc_type, exc_value, exc_traceback): self.out.close()
-
-    #--Stream Wrapping ------------------------------------
-    def write(self,data): self.out.write(data)
-    def tell(self): return self.out.tell()
-    def seek(self,offset,whence=os.SEEK_SET): return self.out.seek(offset,whence)
-    def getvalue(self): return self.out.getvalue()
-    def close(self): self.out.close()
