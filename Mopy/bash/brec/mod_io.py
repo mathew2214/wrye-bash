@@ -283,15 +283,21 @@ class ModReader(object):
         strLen, = self.unpack(__unpacker, 4, recType)
         return self.readString(strLen,recType)
 
-    def readString(self,size,recType='----'):
+    def readString(self, size, readId='----', encoding_=bolt.pluginEncoding,
+                    avoidEncodings_=(u'utf8', u'utf-8')):
         """Read string from file, stripping zero terminator."""
-        return u'\n'.join(decoder(x,bolt.pluginEncoding,avoidEncodings=('utf8','utf-8')) for x in
-                          bolt.cstrip(self.read(size,recType)).split('\n'))
+        # byte_str = self.read(size,recType).rstrip(b'\x00')
+        byte_str = self.read(size - 1, readId)
+        self.ins.seek(1, 1) # discard null?
+        ##: why we split and then join?
+        return u'\n'.join(decoder(x, encoding_, avoidEncodings_) for x in
+                          byte_str.split('\n'))
 
-    def readStrings(self,size,recType='----'):
+    def readStrings(self, size, readId='----', encoding_=bolt.pluginEncoding,
+                    avoidEncodings_=(u'utf8', u'utf-8')):
         """Read strings from file, stripping zero terminator."""
-        return [decoder(x,bolt.pluginEncoding,avoidEncodings=('utf8','utf-8')) for x in
-                self.read(size,recType).rstrip(null1).split(null1)]
+        return [decoder(x, encoding_, avoidEncodings_) for x in
+                self.read(size, readId).rstrip(null1).split(null1)]
 
     def unpack(self, struct_unpacker, size, recType='----'):
         """Read size bytes from the file and unpack according to format of
