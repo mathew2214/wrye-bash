@@ -121,7 +121,7 @@ def getbestencoding(bitstream):
     #print '%s: %s (%s)' % (repr(bitstream),encoding,confidence)
     return encoding_,confidence
 
-def decode(byte_str, encoding=None, avoidEncodings=()):
+def decoder(byte_str, encoding=None, avoidEncodings=()):
     """Decode a byte string to unicode, using heuristics on encoding."""
     if isinstance(byte_str, unicode) or byte_str is None: return byte_str
     # Try the user specified encoding first
@@ -382,7 +382,7 @@ def GPath(name):
     elif isinstance(name,Path): norm = name._s
     elif not name: norm = name # empty string - bin this if ?
     elif isinstance(name,unicode): norm = os.path.normpath(name)
-    else: norm = os.path.normpath(decode(name))
+    else: norm = os.path.normpath(decoder(name))
     path = _gpaths.get(norm)
     if path is not None: return path
     else: return _gpaths.setdefault(norm,Path(norm))
@@ -423,14 +423,14 @@ class Path(object):
         """Return the normpath for specified name/path object."""
         if isinstance(name,Path): return name._s
         elif not name: return name
-        elif isinstance(name,str): name = decode(name)
+        elif isinstance(name,str): name = decoder(name)
         return os.path.normpath(name)
 
     @staticmethod
     def __getCase(name):
         """Return the normpath+normcase for specified name/path object."""
         if not name: return name
-        if isinstance(name, str): name = decode(name)
+        if isinstance(name, str): name = decoder(name)
         return os.path.normcase(os.path.normpath(name))
 
     @staticmethod
@@ -467,7 +467,7 @@ class Path(object):
     def __setstate__(self,norm):
         """Used by unpickler. Reconstruct _cs."""
         # Older pickle files stored filename in str, not unicode
-        if not isinstance(norm,unicode): norm = decode(norm)
+        if not isinstance(norm,unicode): norm = decoder(norm)
         self._s = norm
         self._cs = os.path.normcase(self._s)
 
