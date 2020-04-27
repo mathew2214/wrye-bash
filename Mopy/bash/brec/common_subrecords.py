@@ -154,7 +154,7 @@ class MelCtda(MelUnion):
         formElements.add(self)
 
     def getLoaders(self, loaders):
-        loaders[next(self.element_mapping.itervalues()).subType] = self
+        loaders[next(self.element_mapping.itervalues()).mel_sig] = self
 
     def getSlotsUsed(self):
         return (self.decider_result_attr,) + next(

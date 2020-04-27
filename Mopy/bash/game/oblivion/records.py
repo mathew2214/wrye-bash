@@ -23,7 +23,6 @@
 # =============================================================================
 """This module contains the oblivion record classes."""
 import re
-import struct
 from collections import OrderedDict
 
 from ... import brec
@@ -1509,7 +1508,7 @@ class MrePack(MelRecord):
 ##
 ##        def dumpData(self,record,out):
 ##            for target in record.__getattribute__(self.attr):
-##                out.packSub(self.subType,'I' + 'I'*(len(target.points)), target.reference, target.points)
+##                out.packSub(self.mel_sig,'I' + 'I'*(len(target.points)), target.reference, target.points)
 ##
 ##    melSet = MelSet(
 ##        MelBase('DATA','data_p'),

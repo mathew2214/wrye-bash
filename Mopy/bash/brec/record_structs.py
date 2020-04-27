@@ -429,17 +429,17 @@ class MreRecord(object):
         return ModReader(self.inName,sio(self.getDecompressed()))
 
     #--Accessing subrecords ---------------------------------------------------
-    def getSubString(self,subType):
+    def getSubString(self, mel_sig_):
         """Returns the (stripped) string for a zero-terminated string
         record."""
         # Common subtype expanded in self?
-        attr = MreRecord.subtype_attr.get(subType)
+        attr = MreRecord.subtype_attr.get(mel_sig_)
         value = None # default
         # If not MreRecord, then we will have info in data.
         if self.__class__ != MreRecord:
             if attr not in self.__slots__: return value
             return self.__getattribute__(attr)
-        for subrec in self.iterate_subrecords(mel_sigs={subType}):
+        for subrec in self.iterate_subrecords(mel_sigs={mel_sig_}):
             value = bolt.cstrip(subrec.mel_data)
             break
         return decoder(value)
