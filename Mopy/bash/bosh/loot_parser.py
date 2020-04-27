@@ -36,7 +36,7 @@ from collections import deque
 
 from .loot_conditions import _ACondition, Comparison, ConditionAnd, \
     ConditionFunc, ConditionNot, ConditionOr
-from ..bolt import decode, deprint, LowerDict, Path
+from ..bolt import decoder, deprint, LowerDict, Path
 from ..exception import LexerError, ParserError
 
 # Try to use the C version (way faster), if that isn't possible fall back to
@@ -165,14 +165,14 @@ class _PluginEntry(object):
         for tag in yaml_entry.get('tag', ()):
             try:
                 removes = tag[0] == '-'
-                target_tag = decode(tag[1:] if removes else tag)
+                target_tag = decoder(tag[1:] if removes else tag)
             except KeyError:
                 # This is a dict, means we'll have to handle conditions later
                 tag_name = tag['name']
                 removes = tag_name[0] == '-'
                 target_tag = _ConditionalTag(
-                    decode(tag_name[1:] if removes else tag_name),
-                    decode(tag['condition']))
+                    decoder(tag_name[1:] if removes else tag_name),
+                    decoder(tag['condition']))
             target_set = self.tags_removed if removes else self.tags_added
             target_set.add(target_tag)
 
@@ -591,6 +591,6 @@ def _parse_list(list_path):
             list_contents = yaml.load(yaml_data, Loader=SafeLoader)
         else:
             list_contents = yaml.load(ins, Loader=SafeLoader)
-    ##: Are the decode calls here (and in _PluginEntry.__init__) needed?
-    return LowerDict({decode(p['name']): _PluginEntry(p) for p
+    ##: Are the decoder calls here (and in _PluginEntry.__init__) needed?
+    return LowerDict({decoder(p['name']): _PluginEntry(p) for p
                       in list_contents.get('plugins', ())})
