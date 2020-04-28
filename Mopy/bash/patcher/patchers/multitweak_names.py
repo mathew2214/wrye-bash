@@ -36,6 +36,8 @@ from ...patcher.base import AMultiTweakItem, AMultiTweaker, DynamicNamedTweak
 from ...patcher.patchers.base import MultiTweakItem, CBash_MultiTweakItem
 from ...patcher.patchers.base import MultiTweaker, CBash_MultiTweaker
 
+_ignored_chars=frozenset(u'+-=.()[]')
+
 class _ANamesTweak(AMultiTweakItem):
     """Shared code of PBash/CBash names tweaks and hasty abstraction over
     CBash/PBash differences to allow moving duplicate code into _A classes."""
@@ -159,7 +161,7 @@ class _ANamesTweak_Body(_ANamesTweak):
 
     def wants_record(self, record):
         old_full = record.full
-        return (old_full and old_full[0] not in u'+-=.()[]' and
+        return (old_full and old_full[0] not in _ignored_chars and
                 self._try_renaming(record))
 
     def _do_exec_rename(self, record, heavy_armor_addition, is_head, is_ring,
@@ -518,9 +520,9 @@ class _ANamesTweak_Weapons(_ANamesTweak):
             (_(u'B08 - Iron Bow'),u'%s%02d - '),
             (_(u'(B08) Iron Bow'),u'(%s%02d) '),)
 
-    def wants_record(self, record, _begin_chars=frozenset(u'+-=.()[]')):
+    def wants_record(self, record):
         return (record.full and (self._get_record_signature(record) != b'AMMO'
-                                 or record.full[0] not in _begin_chars)
+                                 or record.full[0] not in _ignored_chars)
                 and self._try_renaming(record))
 
     def _do_exec_rename(self, record):
@@ -604,19 +606,19 @@ class _ATextReplacer(DynamicNamedTweak, _ANamesTweak):
         self.re_replacement = reReplace
         # Convert the match/replace strings to record paths
         self._match_replace_rpaths = {
-            rec_sig: tuple([RecPath(r) for r in rpaths])
-            for rec_sig, rpaths in self._match_replace_rpaths.iteritems()
+            rsig: tuple([RecPath(r) for r in rpaths])
+            for rsig, rpaths in self._match_replace_rpaths.iteritems()
         }
 
     def wants_record(self, record):
         can_change = self.re_match.search
-        rec_sig = self._get_record_signature(record)
-        if rec_sig == b'GMST':
+        record_sig = self._get_record_signature(record)
+        if record_sig == b'GMST':
             # GMST can't be handled by RecPath (yet?), thankfully it's
             # identical for all games
             return record.eid[0] == u's' and can_change(record.value or u'')
         else:
-            for rp in self._match_replace_rpaths[rec_sig]: # type: RecPath
+            for rp in self._match_replace_rpaths[record_sig]: # type: RecPath
                 if not rp.rp_exists(record): continue
                 for val in rp.rp_eval(record):
                     if can_change(val or u''): return True
@@ -625,11 +627,11 @@ class _ATextReplacer(DynamicNamedTweak, _ANamesTweak):
     def _exec_rename(self, record):
         sub_replacement, replacement = self.re_match.sub, self.re_replacement
         exec_replacement = partial(sub_replacement, replacement)
-        rec_sig = self._get_record_signature(record)
-        if rec_sig == b'GMST':
+        record_sig = self._get_record_signature(record)
+        if record_sig == b'GMST':
             record.value = exec_replacement(record.value)
         else:
-            for rp in self._match_replace_rpaths[rec_sig]: # type: RecPath
+            for rp in self._match_replace_rpaths[record_sig]: # type: RecPath
                 if rp.rp_exists(record):
                     rp.rp_map(record, exec_replacement)
 

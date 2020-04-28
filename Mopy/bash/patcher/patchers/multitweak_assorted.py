@@ -41,12 +41,6 @@ from ...patcher.patchers.base import MultiTweaker, CBash_MultiTweaker
 class _AAssortedTweak(AMultiTweakItem):
     """Hasty abstraction over PBash/CBash records differences to allow moving
     wants_record overrides into the abstract classes."""
-    @staticmethod
-    def _any_body_flag_set(record):
-        """Checks if any body flag but the right ring flag is set. If only the
-        right ring and no other body flags are set, then this is probably a
-        token that wasn't zeroed (which there are a lot of)."""
-        raise AbstractError(u'_any_body_flag_set not implemented')
 
     @staticmethod
     def _is_nonplayable(record):
@@ -60,13 +54,6 @@ class _AAssortedTweak(AMultiTweakItem):
 
 class _AssortPTweak(_AAssortedTweak, MultiTweakItem):
     """An assorted PBash tweak."""
-    @staticmethod
-    def _any_body_flag_set(record):
-        return (record.flags.leftRing or record.flags.foot or
-                record.flags.hand or record.flags.amulet or
-                record.flags.lowerBody or record.flags.upperBody or
-                record.flags.head or record.flags.hair or
-                record.flags.tail or record.flags.shield)
 
     @staticmethod
     def _is_nonplayable(record):
@@ -86,13 +73,6 @@ class _AssortCTweak(_AAssortedTweak, CBash_MultiTweakItem):
         # handles this by making sure the MGEF records are almost always
         # read in, and always before patchers that will need them
         self.SEFF = MGEFCode(b'SEFF')
-
-    @staticmethod
-    def _any_body_flag_set(record):
-        return (record.IsLeftRing or record.IsFoot or record.IsHand or
-                record.IsAmulet or record.IsLowerBody or record.IsUpperBody or
-                record.IsHead or record.IsHair or record.IsTail or
-                record.IsShield)
 
     @staticmethod
     def _is_nonplayable(record):
@@ -340,6 +320,14 @@ rePlayableSkips = re.compile(
 
 class _APlayableTweak(_AAssortedTweak):
     """Shared code of PBash/CBash armor/clothing playable tweaks."""
+
+    @staticmethod
+    def _any_body_flag_set(record):
+        """Checks if any body flag but the right ring flag is set. If only the
+        right ring and no other body flags are set, then this is probably a
+        token that wasn't zeroed (which there are a lot of)."""
+        raise AbstractError(u'_any_body_flag_set not implemented')
+
     def wants_record(self, record):
         if (not self._is_nonplayable(record) or
             not self._any_body_flag_set(record) or record.script): return False
@@ -349,6 +337,15 @@ class _APlayableTweak(_AAssortedTweak):
 
 class _PPlayableTweak(_APlayableTweak, _AssortPTweak):
     """Shared code of PBash armor/clothing playable tweaks."""
+
+    @staticmethod
+    def _any_body_flag_set(record):
+        return (record.flags.leftRing or record.flags.foot or
+                record.flags.hand or record.flags.amulet or
+                record.flags.lowerBody or record.flags.upperBody or
+                record.flags.head or record.flags.hair or
+                record.flags.tail or record.flags.shield)
+
     def buildPatch(self,log,progress,patchFile):
         """Edits patch file as desired. Will write to log."""
         count = Counter()
@@ -364,6 +361,13 @@ class _CPlayableTweak(_APlayableTweak, _AssortCTweak):
     """Shared code of CBash armor/clothing playable tweaks."""
     scanOrder = 29 # Run before the show armor/clothing tweaks
     editOrder = 29
+
+    @staticmethod
+    def _any_body_flag_set(record):
+        return (record.IsLeftRing or record.IsFoot or record.IsHand or
+                record.IsAmulet or record.IsLowerBody or record.IsUpperBody or
+                record.IsHead or record.IsHair or record.IsTail or
+                record.IsShield)
 
     def apply(self,modFile,record,bashTags):
         """Edits patch file as desired. """
@@ -1200,10 +1204,11 @@ class AAssortedTweak_DefaultIcons(_AAssortedTweak):
 
 class AssortedTweak_DefaultIcons(AAssortedTweak_DefaultIcons, _AssortPTweak):
     def wants_record(self, record):
-        if (record.recType == b'LIGH' and not record.flags.canTake or
-                record.recType == b'QUST' and not record.stages or
-                record.recType in (b'ARMO', b'CLOT') and
-                record.flags.notPlayable): return False
+        rsig = record.recType
+        if (rsig == b'LIGH' and not record.flags.canTake or
+            rsig == b'QUST' and not record.stages or
+            rsig in (b'ARMO', b'CLOT') and record.flags.notPlayable):
+            return False
         return super(AssortedTweak_DefaultIcons, self).wants_record(record)
 
     def buildPatch(self,log,progress,patchFile):
