@@ -133,40 +133,6 @@ class MelBase(Subrecord):
     def getSlotsUsed(self):
         return self.attr,
 
-    @staticmethod
-    def parseElements(*elements):
-        # type: (list[None|unicode|tuple]) -> list[tuple]
-        """Parses elements and returns attrs,defaults,actions,formAttrs where:
-        * attrs is tuple of attributes (names)
-        * formAttrs is tuple of attributes that have fids,
-        * defaults is tuple of default values for attributes
-        * actions is tuple of callables to be used when loading data
-        Note that each element of defaults and actions matches corresponding attr element.
-        Used by struct subclasses.
-
-        Example call:
-        parseElements('level', ('unused1', null2), (FID, 'listId', None),
-                      ('count', 1), ('unused2', null2))
-        """
-        formAttrs = []
-        lenEls = len(elements)
-        attrs, defaults, actions = [0] * lenEls, [0] * lenEls, [0] * lenEls
-        formAttrsAppend = formAttrs.append
-        for index,element in enumerate(elements):
-            if not isinstance(element,tuple): element = (element,)
-            el_0 = element[0]
-            attrIndex = el_0 == 0
-            if el_0 == FID:
-                formAttrsAppend(element[1])
-                attrIndex = 1
-            elif callable(el_0):
-                actions[index] = el_0
-                attrIndex = 1
-            attrs[index] = element[attrIndex]
-            if len(element) - attrIndex == 2:
-                defaults[index] = element[-1] # else leave to 0
-        return map(tuple,(attrs,defaults,actions,formAttrs))
-
     def getDefaulters(self,defaulters,base):
         """Registers self as a getDefault(attr) provider."""
         pass
@@ -585,6 +551,40 @@ class MelStruct(MelBase):
         self.attrs, self.defaults, self.actions, self.formAttrs = \
             self.__class__.parseElements(*elements)
         self._unpacker = struct.Struct(self.struct_format).unpack
+
+    @staticmethod
+    def parseElements(*elements):
+        # type: (list[None|unicode|tuple]) -> list[tuple]
+        """Parses elements and returns attrs,defaults,actions,formAttrs where:
+        * attrs is tuple of attributes (names)
+        * formAttrs is tuple of attributes that have fids,
+        * defaults is tuple of default values for attributes
+        * actions is tuple of callables to be used when loading data
+        Note that each element of defaults and actions matches corresponding attr element.
+        Used by struct subclasses.
+
+        Example call:
+        parseElements('level', ('unused1', null2), (FID, 'listId', None),
+                      ('count', 1), ('unused2', null2))
+        """
+        formAttrs = []
+        lenEls = len(elements)
+        attrs, defaults, actions = [0] * lenEls, [0] * lenEls, [0] * lenEls
+        formAttrsAppend = formAttrs.append
+        for index,element in enumerate(elements):
+            if not isinstance(element,tuple): element = (element,)
+            el_0 = element[0]
+            attrIndex = el_0 == 0
+            if el_0 == FID:
+                formAttrsAppend(element[1])
+                attrIndex = 1
+            elif callable(el_0):
+                actions[index] = el_0
+                attrIndex = 1
+            attrs[index] = element[attrIndex]
+            if len(element) - attrIndex == 2:
+                defaults[index] = element[-1] # else leave to 0
+        return map(tuple,(attrs,defaults,actions,formAttrs))
 
     def getSlotsUsed(self):
         return self.attrs
