@@ -38,7 +38,6 @@ from itertools import chain
 
 from .basic_elements import MelBase, MelNull, MelObject, MelStruct
 from .. import exception
-from ..bolt import struct_pack
 
 #------------------------------------------------------------------------------
 class _MelDistributor(MelNull):
@@ -495,7 +494,7 @@ class MelVector(MelStruct):
         values = list(chain.from_iterable(
             j if isinstance(j, list) else [j] for j in
             map(record.__getattribute__, self.__class__._attr_indexes)))
-        return struct_pack(self.struct_format, *values)
+        return self._packer(*values)
 
 #------------------------------------------------------------------------------
 # Unions and Deciders

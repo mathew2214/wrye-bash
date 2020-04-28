@@ -547,10 +547,13 @@ class MelStruct(MelBase):
     """Represents a structure record."""
 
     def __init__(self, mel_sig, struct_format, *elements):
-        self.mel_sig, self.struct_format = mel_sig, struct_format
+        self.mel_sig = mel_sig
         self.attrs, self.defaults, self.actions, self.formAttrs = \
             self.__class__.parseElements(*elements)
-        self._unpacker = struct.Struct(self.struct_format).unpack
+        _struct = struct.Struct(struct_format)
+        self._unpacker = _struct.unpack
+        self._packer = _struct.pack
+        self._static_size = _struct.size
 
     @staticmethod
     def parseElements(*elements):
@@ -607,7 +610,7 @@ class MelStruct(MelBase):
     def pack_subrecord_data(self, record):
         values = [value.dump() if action else value for value, action in
                   zip(map(record.__getattribute__, self.attrs), self.actions)]
-        return struct_pack(self.struct_format, *values)
+        return self._packer(*values)
 
     def mapFids(self,record,function,save=False):
         getter = record.__getattribute__
@@ -618,13 +621,16 @@ class MelStruct(MelBase):
 
     @property
     def static_size(self):
-        return struct.calcsize(self.struct_format)
+        return self._static_size
 
 # Simple primitive type wrappers ----------------------------------------------
-class _MelSimpleStruct(MelStruct):
+def _get_structs(struct_format):
+    _struct = struct.Struct(struct_format)
+    return _struct.unpack, _struct.pack, _struct.size
+
+class _MelField(MelStruct):
     """A simple static subrecord - no actions and a static unpacker."""
-    struct_format = u'I'
-    _unpacker = struct.Struct(struct_format).unpack
+    _unpacker, _packer, static_size = _get_structs(u'I')
 
     def __init__(self, mel_sig, element):
         self.mel_sig = mel_sig
@@ -637,50 +643,35 @@ class _MelSimpleStruct(MelStruct):
                            ins.unpack(self._unpacker, size_, readId))
 
     def pack_subrecord_data(self, record):
-        return struct_pack(self.struct_format,
-                           record.__getattribute__(self.attr))
+        return self._packer(record.__getattribute__(self.attr))
 
-class MelFloat(_MelSimpleStruct):
+class MelFloat(_MelField):
     """Float."""
-    struct_format = u'=f'
-    _unpacker = struct.Struct(struct_format).unpack
-    static_size = struct.calcsize(struct_format)
+    _unpacker, _packer, static_size = _get_structs(u'=f')
 
-class MelSInt8(_MelSimpleStruct):
+class MelSInt8(_MelField):
     """Signed 8-bit integer."""
-    struct_format = u'=b'
-    _unpacker = struct.Struct(struct_format).unpack
-    static_size = struct.calcsize(struct_format)
+    _unpacker, _packer, static_size = _get_structs(u'=b')
 
-class MelSInt16(_MelSimpleStruct):
+class MelSInt16(_MelField):
     """Signed 16-bit integer."""
-    struct_format = u'=h'
-    _unpacker = struct.Struct(struct_format).unpack
-    static_size = struct.calcsize(struct_format)
+    _unpacker, _packer, static_size = _get_structs(u'=h')
 
-class MelSInt32(_MelSimpleStruct):
+class MelSInt32(_MelField):
     """Signed 32-bit integer."""
-    struct_format = u'=i'
-    _unpacker = struct.Struct(struct_format).unpack
-    static_size = struct.calcsize(struct_format)
+    _unpacker, _packer, static_size = _get_structs(u'=i')
 
-class MelUInt8(_MelSimpleStruct):
+class MelUInt8(_MelField):
     """Unsigned 8-bit integer."""
-    struct_format = u'=B'
-    _unpacker = struct.Struct(struct_format).unpack
-    static_size = struct.calcsize(struct_format)
+    _unpacker, _packer, static_size = _get_structs(u'=B')
 
-class MelUInt16(_MelSimpleStruct):
+class MelUInt16(_MelField):
     """Unsigned 16-bit integer."""
-    struct_format = u'=H'
-    _unpacker = struct.Struct(struct_format).unpack
-    static_size = struct.calcsize(struct_format)
+    _unpacker, _packer, static_size = _get_structs(u'=H')
 
-class MelUInt32(_MelSimpleStruct):
+class MelUInt32(_MelField):
     """Unsigned 32-bit integer."""
-    struct_format = u'=I'
-    _unpacker = struct.Struct(struct_format).unpack
-    static_size = struct.calcsize(struct_format)
+    _unpacker, _packer, static_size = _get_structs(u'=I')
 
 #------------------------------------------------------------------------------
 class MelFid(MelUInt32):
@@ -704,10 +695,6 @@ class MelFid(MelUInt32):
             fid = None
         result = function(fid)
         if save: record.__setattr__(attr,result)
-
-    @property
-    def static_size(self):
-        return 4 # Always a uint32
 
 #------------------------------------------------------------------------------
 class MelOptStruct(MelStruct):
