@@ -58,55 +58,74 @@ class MelObject(object):
         return u'<%s>' % u', '.join(sorted(to_show)) # is sorted() needed here?
 
 class Subrecord(object):
-    """A subrecord featuring a signature and size. Basic implementation reads
-    all data without unpacking."""
-    __slots__ = (u'mel_sig', u'mel_size', u'mel_data')
-
-    def __init__(self, mel_sig, mel_size, ins=None):
-        self.mel_sig = mel_sig
-        self.mel_size = mel_size
-        if ins: self.loadData(ins, mel_sig, mel_size,'----.'+self.mel_sig)
-
-    def loadData(self, ins, sub_type, size_, readId):
-        """Reads data from ins into self.data attribute."""
-        self.mel_data = ins.read(size_, readId)
-
-    @staticmethod
-    def unpackSubHeader(ins, recType='----', expType=None, expSize=0,
-                        __unpacker=_int_unpacker):
-        """Unpack a subrecord header. Optionally checks for match with expected
-        type and size."""
-        ins_unpack = ins.unpack
-        (mel_type, size) = ins_unpack(MelBase.sub_header_unpack,
-                                      MelBase.sub_header_size,
-                                      recType + '.SUB_HEAD')
-        #--Extended storage?
-        while mel_type == 'XXXX':
-            size = ins_unpack(__unpacker, 4, recType + '.XXXX.SIZE.')[0]
-            # Throw away size here (always == 0)
-            mel_type = ins_unpack(MelBase.sub_header_unpack,
-                                  MelBase.sub_header_size,
-                                  recType + '.XXXX.TYPE')[0]
-        #--Match expected name?
-        if expType and expType != mel_type:
-            raise exception.ModError(ins.inName, u'%s: Expected %s subrecord, '
-                u'but found %s instead.' % (recType, expType, mel_type))
-        #--Match expected size?
-        if expSize and expSize != size:
-            raise exception.ModSizeError(ins.inName, recType + '.' + mel_type,
-                                         (expSize,), size)
-        return mel_type,size
-
-#------------------------------------------------------------------------------
-class MelBase(Subrecord):
-    """Represents a mod record element which can be a subrecord or a field. Typically used for unknown elements.
-    Also used as parent class for other element types."""
+    """A subrecord. Basic implementation reads all data without unpacking."""
     # Format used by sub-record headers. Morrowind uses a different one.
     sub_header_fmt = u'=4sH'
     # precompiled unpacker for sub-record headers
     sub_header_unpack = struct.Struct(sub_header_fmt).unpack
     # Size of sub-record headers. Morrowind has a different one.
     sub_header_size = 6
+    __slots__ = (u'mel_sig', u'mel_data')
+
+    def __init__(self, ins, record_sig, mel_sigs=frozenset()):
+        # record_sig is the sig of parent record
+        mel_sig, mel_size = unpackSubHeader(ins)
+        self.mel_sig = mel_sig
+        if not mel_sigs or mel_sig in mel_sigs:
+            self.mel_data = ins.read(mel_size, record_sig + self.mel_sig)
+        else:
+            self.mel_data = None
+            ins.seek(mel_size, 1) # discard the data
+
+    def packSub(self, out, binary_data):
+        # type: (file, bytes) -> None
+        """Write subrecord header and data to output stream.
+        Will automatically add a prefacing XXXX size subrecord to handle data
+        with size > 0xFFFF."""
+        try:
+            lenData = len(binary_data)
+            self._dump_bytes(out, binary_data, lenData)
+        except Exception:
+            bolt.deprint(u'%r: Failed packing: %s, %s' % (
+                self, self.mel_sig, binary_data))
+            raise
+
+    def _dump_bytes(self, out, binary_data, lenData):
+        outWrite = out.write
+        if lenData > 0xFFFF:
+            outWrite(struct_pack(u'=4sHI', b'XXXX', 4, lenData))
+            lenData = 0
+        outWrite(struct_pack(MelBase.sub_header_fmt, self.mel_sig, lenData))
+        outWrite(binary_data)
+
+def unpackSubHeader(ins, recType='----', expType=None, expSize=0,
+                    __unpacker=_int_unpacker, __sr=Subrecord):
+    """Unpack a subrecord header. Optionally checks for match with expected
+    type and size."""
+    ins_unpack = ins.unpack
+    (mel_type, size) = ins_unpack(__sr.sub_header_unpack, __sr.sub_header_size,
+                                  recType + '.SUB_HEAD')
+    #--Extended storage?
+    while mel_type == 'XXXX':
+        size = ins_unpack(__unpacker, 4, recType + '.XXXX.SIZE.')[0]
+        # Throw away size here (always == 0)
+        mel_type = ins_unpack(__sr.sub_header_unpack, __sr.sub_header_size,
+                              recType + '.XXXX.TYPE')[0]
+    #--Match expected name?
+    if expType and expType != mel_type:
+        raise exception.ModError(ins.inName, u'%s: Expected %s subrecord, '
+            u'but found %s instead.' % (recType, expType, mel_type))
+    #--Match expected size?
+    if expSize and expSize != size:
+        raise exception.ModSizeError(ins.inName, recType + '.' + mel_type,
+                                     (expSize,), size)
+    return mel_type,size
+
+#------------------------------------------------------------------------------
+class MelBase(Subrecord):
+    """Represents a mod record element which can be a subrecord or a field.
+    Typically used for unknown elements."""
+    __slots__ = (u'subType', u'attr', u'default')
 
     def __init__(self, subType, attr, default=None):
         self.subType, self.attr, self.default = subType, attr, default
@@ -183,27 +202,6 @@ class MelBase(Subrecord):
         is returned that must be packed by caller (see MelString).
         :rtype: basestring | None"""
         return record.__getattribute__(self.attr) # this better be bytes here
-
-    def packSub(self, out, binary_data):
-        # type: (file, bytes) -> None
-        """Write subrecord header and data to output stream.
-        Will automatically add a prefacing XXXX size subrecord to handle data
-        with size > 0xFFFF."""
-        try:
-            lenData = len(binary_data)
-            self._dump_bytes(out, binary_data, lenData)
-        except Exception:
-            bolt.deprint(u'%r: Failed packing: %s, %s' % (
-                self, self.subType, binary_data))
-            raise
-
-    def _dump_bytes(self, out, binary_data, lenData):
-        outWrite = out.write
-        if lenData > 0xFFFF:
-            outWrite(struct_pack(u'=4sHI', b'XXXX', 4, lenData))
-            lenData = 0
-        outWrite(struct_pack(self.sub_header_fmt, self.subType, lenData))
-        outWrite(binary_data)
 
     def mapFids(self,record,function,save=False):
         """Applies function to fids. If save is True, then fid is set

@@ -29,7 +29,7 @@ import copy
 import zlib
 from functools import partial
 
-from . import MelBase, Subrecord
+from . import Subrecord, unpackSubHeader
 from .mod_io import ModReader, ModWriter
 from .utils_constants import strFid, _int_unpacker
 from .. import bolt, exception
@@ -71,7 +71,7 @@ class MelSet(object):
         loaders = self.loaders
         # Load each subrecord
         ins_at_end = ins.atEnd
-        load_sub_header = partial(MelBase.unpackSubHeader, ins)
+        load_sub_header = partial(unpackSubHeader, ins)
         read_id_prefix = rec_type + '.'
         while not ins_at_end(endPos, rec_type):
             sub_type, sub_size = load_sub_header(rec_type)
@@ -356,22 +356,20 @@ class MreRecord(object):
 
         Subclasses should actually read the data, but MreRecord just skips over
         it (assuming that the raw data has already been read to itself. To force
-        reading data into an array of subrecords, use loadSubrecords()."""
+        reading data into an array of subrecords, use iterate_subrecords()."""
         ins.seek(endPos)
 
-    def loadSubrecords(self):
-        """This is for MreRecord only. It reads data into an array of subrecords,
-        so that it can be handled in a simplistic way."""
-        self.subrecords = []
+    def iterate_subrecords(self, mel_sigs=frozenset()):
+        """This is for MreRecord only. Iterates over data unpacking them to
+        subrecords - DEPRECATED."""
         if not self.data: return
         with self.getReader() as reader:
             _rec_sig_ = self.recType
             readAtEnd = reader.atEnd
-            readSubHeader = partial(MelBase.unpackSubHeader, reader)
-            subAppend = self.subrecords.append
             while not readAtEnd(reader.size,_rec_sig_):
-                (mel_type, mel_size) = readSubHeader(_rec_sig_)
-                subAppend(Subrecord(mel_type, mel_size, reader))
+                subrecord = Subrecord(reader, _rec_sig_, mel_sigs)
+                if not mel_sigs or subrecord.mel_sig in mel_sigs:
+                    yield subrecord
 
     def convertFids(self,mapper,toLong):
         """Converts fids between formats according to mapper.
@@ -385,12 +383,6 @@ class MreRecord(object):
     def setChanged(self,value=True):
         """Sets changed attribute to value. [Default = True.]"""
         self.changed = value
-
-    def setData(self,data):
-        """Sets data and size."""
-        self.data = data
-        self.size = len(data)
-        self.changed = False
 
     def getSize(self):
         """Return size of self.data, after, if necessary, packing it."""
@@ -413,11 +405,11 @@ class MreRecord(object):
     def dumpData(self,out):
         """Dumps state into data. Called by getSize(). This default version
         just calls subrecords to dump to out."""
-        if self.subrecords is None:
-            raise exception.StateError(u'Subrecords not unpacked. [%s: %s %08X]' %
+        if self.data == b'': ##: check against None?
+            raise exception.StateError(u'Dumping empty record. [%s: %s %08X]' %
                                        (self.inName, self.recType, self.fid))
-        for subrecord in self.subrecords:
-            subrecord.dump(out)
+        for subrecord in self.iterate_subrecords():
+            subrecord.packSub(out, subrecord.mel_data)
 
     def dump(self,out):
         """Dumps all data to output stream."""
@@ -447,27 +439,9 @@ class MreRecord(object):
         if self.__class__ != MreRecord:
             if attr not in self.__slots__: return value
             return self.__getattribute__(attr)
-        # Subrecords available?
-        if self.subrecords is not None:
-            for subrecord in self.subrecords:
-                if subrecord.subType == subType:
-                    value = bolt.cstrip(subrecord.data)
-                    break
-        # No subrecords, but we have data.
-        elif self.data:
-            with self.getReader() as reader:
-                _rec_sig_ = self.recType
-                readAtEnd = reader.atEnd
-                readSubHeader = partial(MelBase.unpackSubHeader, reader)
-                readSeek = reader.seek
-                readRead = reader.read
-                while not readAtEnd(reader.size,_rec_sig_):
-                    (type,size) = readSubHeader(_rec_sig_)
-                    if type != subType:
-                        readSeek(size,1)
-                    else:
-                        value = bolt.cstrip(readRead(size))
-                        break
+        for subrec in self.iterate_subrecords(mel_sigs={subType}):
+            value = bolt.cstrip(subrec.mel_data)
+            break
         return decoder(value)
 
     def loadInfos(self,ins,endPos,infoClass):
