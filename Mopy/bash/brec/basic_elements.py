@@ -83,7 +83,7 @@ class Subrecord(object):
     def _dump_bytes(self, out, binary_data, lenData):
         outWrite = out.write
         if lenData > 0xFFFF:
-            outWrite(struct_pack(u'=4sHI', b'XXXX', 4, lenData))
+            MelXXXX(lenData)._dump_bytes(out, lenData, 4)
             lenData = 0
         outWrite(struct_pack(MelBase.sub_header_fmt, self.mel_sig, lenData))
         outWrite(binary_data)
@@ -96,7 +96,7 @@ def unpackSubHeader(ins, recType='----', expType=None, expSize=0,
     (mel_type, size) = ins_unpack(__sr.sub_header_unpack, __sr.sub_header_size,
                                   recType + '.SUB_HEAD')
     #--Extended storage?
-    while mel_type == 'XXXX':
+    while mel_type == 'XXXX': ##: why while?? should we do that on load too?
         size = ins_unpack(__unpacker, 4, recType + '.XXXX.SIZE.')[0]
         # Throw away size here (always == 0)
         mel_type = ins_unpack(__sr.sub_header_unpack, __sr.sub_header_size,
@@ -681,6 +681,20 @@ class MelUInt16(_MelField):
 class MelUInt32(_MelField):
     """Unsigned 32-bit integer."""
     _unpacker, _packer, static_size = _get_structs(u'=I')
+
+#------------------------------------------------------------------------------
+class MelXXXX(MelUInt32):
+    """Represents an XXXX size field. Ignores record in load/dump"""
+
+    def __init__(self, int_size):
+        self.int_size = int_size
+        self.mel_sig = b'XXXX'
+
+    def load_data(self, record, ins, sub_type, size_, readId):
+        self.int_size = ins.unpack(self._unpacker, size_, readId)
+
+    def pack_subrecord_data(self, record):
+        return self._packer(self.int_size)
 
 #------------------------------------------------------------------------------
 class MelFid(MelUInt32):
