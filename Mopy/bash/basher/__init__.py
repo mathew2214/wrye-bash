@@ -87,7 +87,7 @@ from ..gui import Button, CancelButton, CheckBox, HLayout, Label, \
     LayoutOptions, RIGHT, SaveButton, Spacer, Stretch, TextArea, TextField, \
     TOP, VLayout, EventResult, DropDown, DialogWindow, WindowFrame, Spinner, \
     Splitter, NotebookCtrl, PanelWin, CheckListBox, Color, Picture, Image, \
-    CenteredSplash, BusyCursor
+    CenteredSplash, BusyCursor, RadioButton
 
 # Constants -------------------------------------------------------------------
 from .constants import colorInfo, settingDefaults, karmacons, installercons
@@ -2694,19 +2694,24 @@ class InstallersDetails(_SashDetailsPanel):
         commentsSplitter.set_min_pane_size(-self.__class__.defaultSashPos)
         commentsSplitter.set_sash_gravity(1.0)
         #--Layout
-        VLayout(items=[subPackagesLabel,
-                       (self.gSubList, LayoutOptions(expand=True, weight=1))]
-                ).apply_to(subPackagesPanel)
-        VLayout(items=[Label(espmsPanel, _(u'Plugin Filter')),
-                       (self.gEspmList, LayoutOptions(expand=True, weight=1))]
-                ).apply_to(espmsPanel)
-        VLayout(item_expand=True, items=[self.gPackage, (
-            self.subSplitter, LayoutOptions(weight=1))]).apply_to(top)
-        VLayout(items=[Label(commentsPanel, _(u'Comments')),
-                       (self.gComments, LayoutOptions(expand=True, weight=1))]
-                ).apply_to(commentsPanel)
-        VLayout(item_expand=True, item_weight=1, items=[commentsPanel]
-                ).apply_to(bottom)
+        VLayout(items=[
+            subPackagesLabel,
+            (self.gSubList, LayoutOptions(expand=True, weight=1)),
+        ]).apply_to(subPackagesPanel)
+        VLayout(items=[
+            Label(espmsPanel, _(u'Plugin Filter')),
+            (self.gEspmList, LayoutOptions(expand=True, weight=1)),
+        ]).apply_to(espmsPanel)
+        VLayout(item_expand=True, items=[
+            self.gPackage, (self.subSplitter, LayoutOptions(weight=1)),
+        ]).apply_to(top)
+        VLayout(items=[
+            Label(commentsPanel, _(u'Comments')),
+            (self.gComments, LayoutOptions(expand=True, weight=1)),
+        ]).apply_to(commentsPanel)
+        VLayout(item_expand=True, item_weight=1, items=[
+            commentsPanel,
+        ]).apply_to(bottom)
 
     def _get_sub_splitter(self):
         return Splitter(self.left, min_pane_size=50, sash_gravity=0.5)
@@ -2945,6 +2950,9 @@ class InstallersDetails(_SashDetailsPanel):
         selected_plugin = GPath(selected_name)
         if selected_plugin not in bosh.modInfos: return
         balt.Link.Frame.notebook.SelectPage('Mods', selected_plugin)
+
+    def switch_to_fomod(self):
+        """"""
 
 class InstallersPanel(BashTab):
     """Panel for InstallersTank."""
