@@ -29,7 +29,7 @@ from ._mergeability import is_esl_capable
 from .loot_parser import libloot_version, LOOTParser
 from .. import balt, bolt, bush, bass, load_order
 from ..bolt import GPath, deprint, sio, struct_pack, struct_unpack
-from ..brec import ModReader, MreRecord, RecordHeader, Subrecord
+from ..brec import ModReader, MreRecord, RecordHeader, SubrecordBlob
 from ..cint import ObBaseRecord, ObCollection
 from ..exception import BoltError, CancelError, ModError
 
@@ -576,7 +576,7 @@ class ModCleaner(object):
                                 if doFog and rtype == 'CELL':
                                     nextRecord = insTell() + hsize
                                     while insTell() < nextRecord:
-                                        subrec = Subrecord(ins, rtype, mel_sigs={b'XCLL'})
+                                        subrec = SubrecordBlob(ins, rtype, mel_sigs={b'XCLL'})
                                         if subrec.mel_data is not None:
                                             color, near, far, rotXY, rotZ, \
                                             fade, clip = __unpacker(
@@ -662,7 +662,7 @@ class NvidiaFogFixer(object):
                     elif type == 'CELL':
                         nextRecord = ins.tell() + size
                         while ins.tell() < nextRecord:
-                            subrec = Subrecord(ins, type)
+                            subrec = SubrecordBlob(ins, type)
                             if subrec.mel_sig == b'XCLL':
                                 color, near, far, rotXY, rotZ, fade, clip = \
                                     __unpacker(subrec.mel_data)
@@ -728,7 +728,7 @@ class ModDetails(object):
                     nextRecord = ins.tell() + rec_siz
                     recs, endRecs = getRecordReader(header.flags1, rec_siz)
                     while recs.tell() < endRecs:
-                        subrec = Subrecord(recs, recType, mel_sigs={u'EDID'})
+                        subrec = SubrecordBlob(recs, recType, mel_sigs={u'EDID'})
                         if subrec.mel_data is not None:
                             # FIXME copied from readString
                             eid = u'\n'.join(bolt.decoder(x, bolt.pluginEncoding,

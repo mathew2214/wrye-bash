@@ -29,7 +29,7 @@ import copy
 import zlib
 from functools import partial
 
-from . import Subrecord, unpackSubHeader
+from . import SubrecordBlob, unpackSubHeader
 from .mod_io import ModReader
 from .utils_constants import strFid, _int_unpacker
 from .. import bolt, exception
@@ -367,9 +367,9 @@ class MreRecord(object):
             _rec_sig_ = self.recType
             readAtEnd = reader.atEnd
             while not readAtEnd(reader.size,_rec_sig_):
-                subrecord = Subrecord(reader, _rec_sig_, mel_sigs)
-                if not mel_sigs or subrecord.mel_sig in mel_sigs:
-                    yield subrecord
+                subrec = SubrecordBlob(reader, _rec_sig_, mel_sigs)
+                if not mel_sigs or subrec.mel_sig in mel_sigs:
+                    yield subrec
 
     def convertFids(self,mapper,toLong):
         """Converts fids between formats according to mapper.

@@ -58,24 +58,14 @@ class MelObject(object):
         return u'<%s>' % u', '.join(sorted(to_show)) # is sorted() needed here?
 
 class Subrecord(object):
-    """A subrecord. Basic implementation reads all data without unpacking."""
+    """A subrecord. Base class defines the subrecord format and packing."""
     # Format used by sub-record headers. Morrowind uses a different one.
     sub_header_fmt = u'=4sH'
     # precompiled unpacker for sub-record headers
     sub_header_unpack = struct.Struct(sub_header_fmt).unpack
     # Size of sub-record headers. Morrowind has a different one.
     sub_header_size = 6
-    __slots__ = (u'mel_sig', u'mel_data')
-
-    def __init__(self, ins, record_sig, mel_sigs=frozenset()):
-        # record_sig is the sig of parent record
-        mel_sig, mel_size = unpackSubHeader(ins)
-        self.mel_sig = mel_sig
-        if not mel_sigs or mel_sig in mel_sigs:
-            self.mel_data = ins.read(mel_size, record_sig + self.mel_sig)
-        else:
-            self.mel_data = None
-            ins.seek(mel_size, 1) # discard the data
+    __slots__ = (u'mel_sig',)
 
     def packSub(self, out, binary_data):
         # type: (file, bytes) -> None
@@ -121,10 +111,30 @@ def unpackSubHeader(ins, recType='----', expType=None, expSize=0,
                                      (expSize,), size)
     return mel_type,size
 
+class SubrecordBlob(Subrecord):
+    """Basic implementation that reads all data without unpacking adapted to
+    current usages."""
+    __slots__ = (u'mel_data',)
+
+    def __init__(self, ins, record_sig, mel_sigs=frozenset()):
+        # record_sig is the sig of parent record
+        mel_sig, mel_size = unpackSubHeader(ins)
+        self.mel_sig = mel_sig
+        if not mel_sigs or mel_sig in mel_sigs:
+            self.mel_data = ins.read(mel_size, record_sig + self.mel_sig)
+        else:
+            self.mel_data = None
+            ins.seek(mel_size, 1) # discard the data
+
 #------------------------------------------------------------------------------
 class MelBase(Subrecord):
     """Represents a mod record element which can be a subrecord or a field.
-    Typically used for unknown elements."""
+    This class is actually a parasitic organism that needs a record to go
+    live. It does not hold any data itself, it uses the load_data API to set
+    host record attributes from an input stream and dumpData to dump those
+    attributes to an  output stream. All the complexity of subrecords
+    unpacking should be encapsulated here. The base class is typically used
+    for unknown elements. """
     __slots__ = (u'attr', u'default')
 
     def __init__(self, mel_sig, attr, default=None):
