@@ -99,7 +99,6 @@ class _SimpleImporter(ImportPatcher):
             if srcMod not in minfs: continue
             srcInfo = minfs[srcMod]
             srcFile = ModFile(srcInfo,loadFactory)
-            masters = srcInfo.get_masters()
             srcFile.load(True)
             srcFile.convertToLongFids(longTypes)
             for recClass in self.recAttrs_class:
@@ -107,7 +106,7 @@ class _SimpleImporter(ImportPatcher):
                 self.srcClasses.add(recClass)
                 self.classestemp.add(recClass)
                 self._init_data_loop(recClass, srcFile, srcMod, temp_id_data)
-            for master in masters:
+            for master in srcInfo.get_masters():
                 if master not in minfs: continue # or break filter mods
                 if master in cachedMasters:
                     masterFile = cachedMasters[master]
@@ -301,7 +300,6 @@ class CellImporter(ImportPatcher):
             srcFile.load(True)
             srcFile.convertToLongFids(('CELL','WRLD'))
             cachedMasters[srcMod] = srcFile
-            masters = srcInfo.get_masters()
             bashTags = srcInfo.getBashTags()
             # print bashTags
             tags = bashTags & set(self.recAttrs)
@@ -322,7 +320,7 @@ class CellImporter(ImportPatcher):
                     # if 'C.Maps' in bashTags:
                     #     if worldBlock.world.mapPath:
                     #         tempCellData['Maps'][worldBlock.world.fid] = worldBlock.world.mapPath
-            for master in masters:
+            for master in srcInfo.get_masters():
                 if master not in minfs: continue # or break filter mods
                 if master in cachedMasters:
                     masterFile = cachedMasters[master]
@@ -843,7 +841,6 @@ class NPCAIPackagePatcher(ImportPatcher):
             if srcMod not in minfs: continue
             srcInfo = minfs[srcMod]
             srcFile = ModFile(srcInfo,loadFactory)
-            masters = srcInfo.get_masters()
             bashTags = srcInfo.getBashTags()
             srcFile.load(True)
             srcFile.convertToLongFids(target_rec_types)
@@ -852,7 +849,7 @@ class NPCAIPackagePatcher(ImportPatcher):
                 for record in srcFile.tops[
                     recClass.classType].getActiveRecords():
                     tempData[record.fid] = record.aiPackages
-            for master in reversed(masters):
+            for master in reversed(srcInfo.get_masters()):
                 if master not in minfs: continue # or break filter mods
                 if master in cachedMasters:
                     masterFile = cachedMasters[master]
@@ -1645,7 +1642,6 @@ class ImportActorsSpells(ImportPatcher):
             if srcMod not in minfs: continue
             srcInfo = minfs[srcMod]
             srcFile = ModFile(srcInfo,loadFactory)
-            masters = srcInfo.get_masters()
             bashTags = srcInfo.getBashTags()
             srcFile.load(True)
             srcFile.convertToLongFids(target_rec_types)
@@ -1653,7 +1649,7 @@ class ImportActorsSpells(ImportPatcher):
                 if recClass.classType not in srcFile.tops: continue
                 for record in srcFile.tops[recClass.classType].getActiveRecords():
                     tempData[record.fid] = record.spells
-            for master in reversed(masters):
+            for master in reversed(srcInfo.get_masters()):
                 if master not in minfs: continue # or break filter mods
                 if master in cachedMasters:
                     masterFile = cachedMasters[master]
@@ -1996,7 +1992,6 @@ class NpcFacePatcher(_ANpcFacePatcher,ImportPatcher):
             temp_faceData = {}
             faceInfo = minfs[faceMod]
             faceFile = ModFile(faceInfo,loadFactory)
-            masters = faceInfo.get_masters()
             bashTags = faceInfo.getBashTags()
             faceFile.load(do_unpack=True)
             faceFile.convertToLongFids(('NPC_',))
@@ -2026,7 +2021,7 @@ class NpcFacePatcher(_ANpcFacePatcher,ImportPatcher):
                 for fid in temp_faceData:
                     faceData[fid] = temp_faceData[fid]
             else:
-                for master in masters:
+                for master in faceInfo.get_masters():
                     if master not in minfs: continue # or break filter mods
                     if master in cachedMasters:
                         masterFile = cachedMasters[master]
