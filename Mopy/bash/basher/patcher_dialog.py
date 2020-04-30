@@ -174,6 +174,9 @@ class PatchDialog(DialogWindow):
         """Do the patch."""
         self.accept_modal()
         patchFile = progress = None
+        import cProfile, pstats
+        pr = cProfile.Profile()
+        pr.enable()
         try:
             patch_name = self.patchInfo.name
             patch_size = self.patchInfo.size
@@ -296,6 +299,10 @@ class PatchDialog(DialogWindow):
                     bolt.deprint(u'Failed to close CBash collection',
                                  traceback=True)
             if progress: progress.Destroy()
+            pr.disable()
+            s = StringIO.StringIO()
+            pstats.Stats(pr, stream=s).sort_stats(u'cumulative').print_stats()
+            bolt.deprint(s.getvalue())
 
     def _save_pbash(self, patchFile, patch_name):
         while True:
