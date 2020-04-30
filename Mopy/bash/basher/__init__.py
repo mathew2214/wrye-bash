@@ -4143,7 +4143,14 @@ class BashApp(wx.App):
             self.InitResources()
             #--Init Data
             progress(0.2, _(u'Initializing Data'))
+            import cProfile, pstats
+            pr = cProfile.Profile()
+            pr.enable()
             self.InitData(progress)
+            pr.disable()
+            s = StringIO.StringIO()
+            pstats.Stats(pr, stream=s).sort_stats(u'cumulative').print_stats()
+            deprint(s.getvalue())
             progress(0.7, _(u'Initializing Version'))
             self.InitVersion()
             #--MWFrame
