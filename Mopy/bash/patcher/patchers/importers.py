@@ -702,9 +702,8 @@ class ActorImporter(_SimpleImporter):
                         fid = record.fid
                         if fid not in temp_id_data: continue
                         for attr, value in temp_id_data[fid].iteritems():
-                            if isinstance(attr,basestring):
-                                if value == reduce(getattr, attr.split('.'),
-                                                   record):
+                            if isinstance(attr, basestring):
+                                if value == attrgetter(attr)(record):
                                     continue
                                 else:
                                     id_data[fid][attr] = value
@@ -712,8 +711,8 @@ class ActorImporter(_SimpleImporter):
                                 temp_values = {}
                                 keep = False
                                 for subattr in attr:
-                                    if value[subattr] != reduce(
-                                            getattr,subattr.split('.'),record):
+                                    if value[subattr] != attrgetter(subattr)(
+                                            record):
                                         keep = True
                                     temp_values[subattr] = value[subattr]
                                 if keep:
