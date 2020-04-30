@@ -371,17 +371,22 @@ class sio(StringIO.StringIO):
 
 # Paths -----------------------------------------------------------------------
 #------------------------------------------------------------------------------
-_gpaths = {}
+class PathDict(collections.defaultdict):
+    """Variant of defaultdict that processes a string (bytestring or text),
+    normalizes it and turns it into a Path as a default action."""
+    def __missing__(self, str_or_uni):
+        norm = Path(os.path.normpath(str_or_uni))
+        self[str_or_uni] = norm
+        return norm
+
+_gpaths = PathDict()
 
 def GPath(str_or_uni):
     """Path factory and cache.
     :rtype: Path
     """
     if isinstance(str_or_uni, Path) or str_or_uni is None: return str_or_uni
-    cached_path = _gpaths.get(str_or_uni)
-    if cached_path is not None: return cached_path
-    else: return _gpaths.setdefault(str_or_uni,
-                                    Path(os.path.normpath(str_or_uni)))
+    return _gpaths[str_or_uni]
 
 def GPathPurge():
     """Cleans out the _gpaths dictionary of any unused bolt.Path objects.
