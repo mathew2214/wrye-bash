@@ -73,12 +73,13 @@ class _SimpleImporter(ImportPatcher):
         for record in srcFile.tops[recClass.classType].getActiveRecords():
             fid = mapper(record.fid)
             temp_id_data[fid] = dict(
-                (attr, record.__getattribute__(attr)) for attr in recAttrs)
+                (attr, attrgetter(attr)(record)) for attr in recAttrs)
 
     def initData(self, progress):
         """Common initData pattern.
 
-        Used in KFFZPatcher, DeathItemPatcher, SoundPatcher, ImportScripts.
+        Used in KFFZPatcher, DeathItemPatcher, SoundPatcher, ImportScripts,
+        WeaponModsPatcher.
         Adding _init_data_loop absorbed GraphicsPatcher also.
         """
         if not self.isActive: return
@@ -123,7 +124,7 @@ class _SimpleImporter(ImportPatcher):
                         fid = mapper(record.fid)
                         if fid not in temp_id_data: continue
                         for attr, value in temp_id_data[fid].iteritems():
-                            if value == record.__getattribute__(attr): continue
+                            if value == attrgetter(attr)(record): continue
                             else:
                                 id_data[fid][attr] = value
             progress.plus()
@@ -134,7 +135,7 @@ class _SimpleImporter(ImportPatcher):
         """Identical scanModFile() pattern of :
 
             GraphicsPatcher, KFFZPatcher, DeathItemPatcher, ImportScripts,
-            SoundPatcher, DestructiblePatcher.
+            SoundPatcher, DestructiblePatcher, ActorImporter, WeaponModsPatcher
         """
         id_data = self.id_data
         mapper = modFile.getLongMapper()
@@ -148,26 +149,7 @@ class _SimpleImporter(ImportPatcher):
                 if not record.longFids: fid = mapper(fid)
                 if fid not in id_data: continue
                 for attr, value in id_data[fid].iteritems():
-                    if record.__getattribute__(attr) != value:
-                        patchBlock.setRecord(record.getTypeCopy(mapper))
-                        break
-
-    def scanModFile2(self, modFile, progress):
-        """Scan mod file against source data."""
-        id_data = self.id_data
-        mapper = modFile.getLongMapper()
-        if self.longTypes:
-            modFile.convertToLongFids(self.longTypes)
-        for recClass in self.srcClasses:
-            if recClass.classType not in modFile.tops: continue
-            patchBlock = getattr(self.patchFile, recClass.classType)
-            for record in modFile.tops[recClass.classType].getActiveRecords():
-                fid = record.fid
-                if not record.longFids: fid = mapper(fid)
-                if fid not in id_data: continue
-                for attr, value in id_data[fid].iteritems():
-                    # OOPS: line below is the only diff from _scanModFile()
-                    if reduce(getattr, attr.split('.'), record) != value:
+                    if attrgetter(attr)(record) != value:
                         patchBlock.setRecord(record.getTypeCopy(mapper))
                         break
 
@@ -182,7 +164,7 @@ class _SimpleImporter(ImportPatcher):
             rec_fid = record.fid
             if rec_fid not in id_data: continue
             for attr, value in id_data[rec_fid].iteritems():
-                if record.__getattribute__(attr) != value: break
+                if attrgetter(attr)(record) != value: break # TODO: cache the attrgetter(attr)
             else: continue
             for attr, value in id_data[rec_fid].iteritems():
                 record.__setattr__(attr, value)
@@ -682,7 +664,7 @@ class CBash_GraphicsPatcher(_RecTypeModLogging):
 #------------------------------------------------------------------------------
 class ActorImporter(_SimpleImporter):
     # note peculiar mapping of record type to dictionaries[tag, attributes]
-    rec_attrs = bush.game.actor_importer_attrs
+    rec_attrs = bush.game.actor_importer_attrs # TODO: refactor to use attrgetter as in base class dropping overrides
 
     def initData(self,progress):
         """Get actors from source files."""
@@ -728,9 +710,8 @@ class ActorImporter(_SimpleImporter):
                         fid = mapper(record.fid)
                         if fid not in temp_id_data: continue
                         for attr, value in temp_id_data[fid].iteritems():
-                            if isinstance(attr,basestring):
-                                if value == reduce(getattr, attr.split('.'),
-                                                   record):
+                            if isinstance(attr, basestring):
+                                if value == attrgetter(attr)(record):
                                     continue
                                 else:
                                     id_data[fid][attr] = value
@@ -738,8 +719,8 @@ class ActorImporter(_SimpleImporter):
                                 temp_values = {}
                                 keep = False
                                 for subattr in attr:
-                                    if value[subattr] != reduce(
-                                            getattr,subattr.split('.'),record):
+                                    if value[subattr] != attrgetter(subattr)(
+                                            record):
                                         keep = True
                                     temp_values[subattr] = value[subattr]
                                 if keep:
@@ -758,14 +739,11 @@ class ActorImporter(_SimpleImporter):
             temp_id_data[fid] = dict()
             for attr in attrs:
                 if isinstance(attr, basestring):
-                    temp_id_data[fid][attr] = reduce(getattr, attr.split('.'),
-                                                     record)
+                    temp_id_data[fid][attr] = attrgetter(attr)(record)
                 elif isinstance(attr, (list, tuple, set)):
                     temp_id_data[fid][attr] = dict(
-                        (subattr, reduce(getattr, subattr.split('.'), record))
+                        (subattr, attrgetter(subattr)(record))
                         for subattr in attr)
-
-    scanModFile = _SimpleImporter.scanModFile2
 
     def _inner_loop(self, keep, records, top_mod_rec, type_count):
         id_data, set_id_data = self.id_data, set(self.id_data)
@@ -2580,70 +2558,6 @@ class WeaponModsPatcher(_SimpleImporter):
         'vatsModReqiured', 'scopeModel', 'dnamFlags1.hasScope',
         'dnamFlags2.scopeFromMod')}
 
-    def initData(self,progress):
-        """Get graphics from source files."""
-        if not self.isActive: return
-        id_data = self.id_data
-        loadFactory = LoadFactory(False, *self.recAttrs_class.keys())
-        longTypes = self.longTypes & set(
-            x.classType for x in self.recAttrs_class)
-        progress.setFull(len(self.srcs))
-        cachedMasters = {}
-        minfs = self.patchFile.p_file_minfos
-        for index,srcMod in enumerate(self.srcs):
-            temp_id_data = {}
-            if srcMod not in minfs: continue
-            srcInfo = minfs[srcMod]
-            srcFile = ModFile(srcInfo,loadFactory)
-            masters = srcInfo.get_masters()
-            srcFile.load(True)
-            srcFile.convertToLongFids(longTypes)
-            mapper = srcFile.getLongMapper()
-            for recClass in self.recAttrs_class:
-                if recClass.classType not in srcFile.tops: continue
-                self.srcClasses.add(recClass)
-                self.classestemp.add(recClass)
-                self._init_data_loop(mapper, recClass, srcFile, srcMod,
-                                     temp_id_data)
-            for master in masters:
-                if master not in minfs: continue # or break filter mods
-                if master in cachedMasters:
-                    masterFile = cachedMasters[master]
-                else:
-                    masterInfo = minfs[master]
-                    masterFile = ModFile(masterInfo,loadFactory)
-                    masterFile.load(True)
-                    masterFile.convertToLongFids(longTypes)
-                    cachedMasters[master] = masterFile
-                mapper = masterFile.getLongMapper()
-                for recClass in self.recAttrs_class:
-                    if recClass.classType not in masterFile.tops: continue
-                    if recClass not in self.classestemp: continue
-                    for record in masterFile.tops[
-                        recClass.classType].getActiveRecords():
-                        fid = mapper(record.fid)
-                        if fid not in temp_id_data: continue
-                        for attr, value in temp_id_data[fid].iteritems():
-                            #if value == record.__getattribute__(attr): continue
-                            if value == reduce(getattr, attr.split('.'), record): continue
-                            else:
-                                id_data[fid][attr] = value
-            progress.plus()
-        self.longTypes &= set(x.classType for x in self.srcClasses)
-        self.isActive = bool(self.srcClasses)
-
-    def _init_data_loop(self, mapper, recClass, srcFile, srcMod, temp_id_data):
-        recAttrs = self.recAttrs_class[recClass]
-        for record in srcFile.tops[recClass.classType].getActiveRecords():
-            fid = mapper(record.fid)
-            #temp_id_data[fid] = dict((attr,record.__getattribute__(attr))
-            # for attr in recAttrs)
-            temp_id_data[fid] = dict(
-                (attr, reduce(getattr, attr.split('.'), record)) for attr in
-                recAttrs)
-
-    scanModFile = _SimpleImporter.scanModFile2
-
     def buildPatch(self, log, progress, types=None):
         """Merge last version of record with patched destructible data as needed."""
         if not self.isActive: return
@@ -2659,22 +2573,22 @@ class WeaponModsPatcher(_SimpleImporter):
                 fid = record.fid
                 if fid not in id_data: continue
                 for attr,value in id_data[fid].iteritems():
-                    #if isinstance(record.__getattribute__(attr),str) and isinstance(value, str):
-                    if isinstance(reduce(getattr, attr.split('.'), record),str) and isinstance(value, str):
+                    rec_attr = attrgetter(attr)(record)
+                    if isinstance(rec_attr, str) and isinstance(value, str):
                         #if record.__getattribute__(attr).lower() != value.lower():
-                        if reduce(getattr, attr.split('.'), record).lower() != value.lower():
+                        if rec_attr.lower() != value.lower():
                             break
                         continue
                     elif attr == 'model':
                         try:
                             #if record.__getattribute__(attr).modPath.lower() != value.modPath.lower():
-                            if reduce(getattr, attr.split('.'), record).modPath.lower() != value.modPath.lower():
+                            if rec_attr.modPath.lower() != value.modPath.lower():
                                 break
                             continue
                         except:
                             break #assume they are not equal (ie they aren't __both__ NONE)
                     #if record.__getattribute__(attr) != value:
-                    if reduce(getattr, attr.split('.'), record) != value:
+                    if rec_attr != value:
                         break
                 else:
                     continue
@@ -2682,7 +2596,7 @@ class WeaponModsPatcher(_SimpleImporter):
                     #record.__setattr__(attr,value)
                     sattr = attr.split('.')
                     lastattr = sattr.pop()
-                    reduce(getattr, sattr, record).__setattr__(lastattr, value)
+                    attrgetter(sattr)(record).__setattr__(lastattr, value)
                 keep(fid)
                 type_count[type] += 1
         id_data = None
