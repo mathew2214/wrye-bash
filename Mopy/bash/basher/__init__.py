@@ -2067,13 +2067,8 @@ class SaveDetails(_ModsSavesDetails):
         self.gCoSaves.label_text = self.coSaves
         self.uilist.SetFileInfo(self.saveInfo)
         #--Picture
-        ss_width, ss_height, ss_data = self.saveInfo.header.image
-        wx_depth = (32 if self.saveInfo.header.has_alpha else 24)
-        wx_fmt = (wx.BitmapBufferFormat_RGBA if self.saveInfo.header.has_alpha
-                  else wx.BitmapBufferFormat_RGB)
-        bm = wx.Bitmap(ss_width, ss_height, wx_depth)
-        bm.CopyFromBuffer(ss_data, wx_fmt)
-        self.picture.set_bitmap(bm)
+        image_tuple = self.saveInfo.header.image if self.saveInfo else None
+        self.picture.set_bitmap(image_tuple)
         #--Info Box
         self.gInfo.modified = False
         note_text = bosh.saveInfos.table.getItem(fileName, 'info',
@@ -4186,17 +4181,8 @@ class BashApp(wx.App):
         bosh.modInfos = bosh.ModInfos()
         bosh.modInfos.refresh(booting=True)
         progress(0.50, _(u'Initializing SaveInfos'))
-        import cProfile, pstats
-        pr = cProfile.Profile()
-        pr.enable()
         bosh.saveInfos = bosh.SaveInfos()
         bosh.saveInfos.refresh(booting=True)
-        pr.disable()
-        s = StringIO.StringIO()
-        sortby = 'cumulative'
-        ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        ps.print_stats()
-        deprint(s.getvalue())
         progress(0.60, _(u'Initializing IniInfos'))
         bosh.iniInfos = bosh.INIInfos()
         bosh.iniInfos.refresh(refresh_target=False)
