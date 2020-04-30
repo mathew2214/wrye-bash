@@ -112,7 +112,7 @@ def unpackSubHeader(ins, recType='----', expType=None, expSize=0,
     return mel_type,size
 
 class SubrecordBlob(Subrecord):
-    """Basic implementation that reads all data without unpacking adapted to
+    """Basic implementation that reads all data without unpacking, adapted to
     current usages."""
     __slots__ = (u'mel_data',)
 
@@ -134,7 +134,7 @@ class MelBase(Subrecord):
     host record attributes from an input stream and dumpData to dump those
     attributes to an  output stream. All the complexity of subrecords
     unpacking should be encapsulated here. The base class is typically used
-    for unknown elements. """
+    for unknown elements."""
     __slots__ = (u'attr', u'default')
 
     def __init__(self, mel_sig, attr, default=None):

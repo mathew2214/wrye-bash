@@ -263,7 +263,7 @@ class MreRecord(object):
         # MultiBound
         (31,'multiBound'), # {0x80000000}
         ))
-    __slots__ = ['header','recType','fid','flags1','size','flags2','changed','subrecords','data','inName','longFids',]
+    __slots__ = ['header','recType','fid','flags1','size','flags2','changed','data','inName','longFids',]
     #--Set at end of class data definitions.
     type_class = None
     simpleTypes = None
@@ -278,8 +278,7 @@ class MreRecord(object):
         self.flags2 = header.flags2
         self.longFids = False #--False: Short (numeric); True: Long (espname,objectindex)
         self.changed = False
-        self.subrecords = None
-        self.data = ''
+        self.data = b''
         self.inName = ins and ins.inName
         if ins: self.load(ins, do_unpack)
 
