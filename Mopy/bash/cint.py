@@ -44,6 +44,7 @@ from ctypes import byref, cast, c_bool, c_byte, c_char, c_char_p, c_float, \
 import math
 import os
 from functools import reduce
+from operator import attrgetter
 from os.path import exists, join
 try:
     #See if cint is being used by Wrye Bash
@@ -1305,11 +1306,11 @@ def ValidateDict(Elements, target):
     return True
 
 def getattr_deep(obj, attr):
-    return reduce(getattr, attr.split('.'), obj)
+    return attrgetter(attr)(obj)
 
 def setattr_deep(obj, attr, value):
     attrs = attr.split('.')
-    setattr(reduce(getattr, attrs[:-1], obj), attrs[-1], value)
+    setattr(attrgetter(attrs[:-1])(obj), attrs[-1], value)
 
 def ExtractCopyList(Elements):
     return [tuple(getattr(listElement, attr) for attr in listElement.copyattrs) for listElement in Elements]
