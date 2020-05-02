@@ -1500,11 +1500,20 @@ class ImportInventory(_AImportInventory, ImportPatcher):
                      x in p_file.p_file_minfos and x in p_file.allSet]
         super(ImportInventory, self).__init__(p_name, p_file, p_sources)
         self.masters = set(chain.from_iterable(
-            p_file.p_file_minfos[srcMod].get_masters()
+            self._recurse_masters(srcMod, p_file.p_file_minfos)
             for srcMod in self.srcs))
         self._masters_and_srcs = self.masters | set(self.srcs)
         self.mod_id_entries = {}
         self.touched = set()
+
+    ##: Move to ModInfo? get_recursive_masters()? get_masters(recursive=True)?
+    def _recurse_masters(self, srcMod, minfs):
+        """Recursively collects all masters of srcMod."""
+        ret_masters = set()
+        for src_master in minfs[srcMod].get_masters():
+            ret_masters.add(src_master)
+            ret_masters.update(self._recurse_masters(src_master, minfs))
+        return ret_masters
 
     def initData(self,progress):
         """Get data from source files."""
@@ -1577,9 +1586,10 @@ class ImportInventory(_AImportInventory, ImportPatcher):
                                        and x not in lookup_added]
                 else:
                     changed_entries = []
-                id_deltas[fid].append((removeItems,
-                                       addEntries if can_add else [],
-                                       changed_entries))
+                final_add_entries = addEntries if can_add else []
+                if removeItems or final_add_entries or changed_entries:
+                    id_deltas[fid].append((removeItems, final_add_entries,
+                                           changed_entries))
         #--Keep record?
         if modFile.fileInfo.name not in self.inventOnlyMods:
             for inv_type in bush.game.inventoryTypes:
@@ -1587,6 +1597,9 @@ class ImportInventory(_AImportInventory, ImportPatcher):
                 id_records = patchBlock.id_records
                 for record in getattr(modFile,inv_type).getActiveRecords():
                     fid = mapper(record.fid)
+                    # Copy the defining version of each record into the BP -
+                    # updating it is handled by
+                    # mergeModFile/update_patch_records_from_mod
                     if fid in touched and fid not in id_records:
                         patchBlock.setRecord(record.getTypeCopy(mapper))
 
@@ -1596,6 +1609,8 @@ class ImportInventory(_AImportInventory, ImportPatcher):
         keep = self.patchFile.getKeeper()
         id_deltas = self.id_deltas
         mod_count = Counter()
+        def item_fid_key(i):
+            return i.item
         for inv_type in bush.game.inventoryTypes:
             for record in getattr(self.patchFile,inv_type).records:
                 changed = False
@@ -1603,8 +1618,6 @@ class ImportInventory(_AImportInventory, ImportPatcher):
                 if not deltas: continue
                 # Use sorted to preserve duplicates, but ignore order. This is
                 # safe because order does not matter for items.
-                def item_fid_key(i):
-                    return i.item
                 old_items = sorted(record.items, key=item_fid_key)
                 for remove_items, add_entries, change_entries in deltas:
                     # First execute removals, don't want to change something
