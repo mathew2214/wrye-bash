@@ -530,7 +530,6 @@ class ModCleaner(object):
                         insTell = ins.tell
                         insUnpackRecHeader = ins.unpackRecHeader
                         ins_seek = ins.seek
-                        headerSize = RecordHeader.rec_header_size
                         while not insAtEnd():
                             subprogress(insTell())
                             header = insUnpackRecHeader()
@@ -540,7 +539,7 @@ class ModCleaner(object):
                                 groupType = header.groupType
                                 if groupType == 0 and header.label not in {'CELL','WRLD'}:
                                     # Skip Tops except for WRLD and CELL groups
-                                    ins_seek(hsize - headerSize, 1)
+                                    header.skip_group(ins)
                                 elif detailed:
                                     if groupType == 1:
                                         # World Children
@@ -594,8 +593,8 @@ class ModCleaner(object):
                                 header = insUnpackRecHeader()
                                 rtype,hsize = header.recType,header.size
                                 if rtype == 'GRUP':
-                                    if header.groupType == 0 and header.label not in {'CELL','WRLD'}:
-                                        ins_seek(hsize - headerSize, 1)
+                                    if header.is_top_group_header and header.label not in {'CELL','WRLD'}:
+                                        header.skip_group(ins)
                                 else:
                                     fid = header.fid
                                     if fid in parents_to_scan:

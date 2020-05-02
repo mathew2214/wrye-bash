@@ -219,14 +219,13 @@ class ModFile(object):
             #--Raw data read
             subProgress.setFull(ins.size)
             insAtEnd = ins.atEnd
-            insSeek = ins.seek
             insTell = ins.tell
             while not insAtEnd():
                 #--Get record info and handle it
                 header = insRecHeader()
                 if not header.is_top_group_header:
                     raise ModError(self.fileInfo.name,u'Improperly grouped file.')
-                label,size = header.label,header.size
+                label = header.label
                 topClass = self.loadFactory.getTopClass(label)
                 try:
                     if topClass:
