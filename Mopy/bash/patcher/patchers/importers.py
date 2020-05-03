@@ -1510,7 +1510,8 @@ class ImportInventory(_AImportInventory, ImportPatcher):
     def _recurse_masters(self, srcMod, minfs):
         """Recursively collects all masters of srcMod."""
         ret_masters = set()
-        for src_master in minfs[srcMod].get_masters():
+        src_masters = minfs[srcMod].get_masters() if srcMod in minfs else []
+        for src_master in src_masters:
             ret_masters.add(src_master)
             ret_masters.update(self._recurse_masters(src_master, minfs))
         return ret_masters
