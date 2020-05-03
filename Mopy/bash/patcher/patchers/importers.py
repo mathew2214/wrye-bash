@@ -23,7 +23,6 @@
 # =============================================================================
 """This module contains the oblivion importer patcher classes."""
 from collections import defaultdict, Counter
-from functools import reduce
 from itertools import chain
 from operator import attrgetter
 # Internal
@@ -38,6 +37,13 @@ from ...parsers import ActorFactions, CBash_ActorFactions, FactionRelations, \
     CBash_FactionRelations, FullNames, CBash_FullNames, ItemStats, \
     CBash_ItemStats, SpellRecords, CBash_SpellRecords
 from ...mod_files import ModFile, LoadFactory
+
+# cache attrgetter objects
+class _AttrGettersCache(dict):
+    def __missing__(self, attr_name):
+        return self.setdefault(attr_name, attrgetter(attr_name))
+
+_attrgetters = _AttrGettersCache()
 
 class _SimpleImporter(ImportPatcher):
     """For lack of a better name - common methods of a bunch of importers.
@@ -153,7 +159,8 @@ class _SimpleImporter(ImportPatcher):
                         patchBlock.setRecord(record.getTypeCopy(mapper))
                         break
 
-    def _inner_loop(self, keep, records, top_mod_rec, type_count):
+    def _inner_loop(self, keep, records, top_mod_rec, type_count,
+                    __attrgetters=_attrgetters):
         """Most common pattern for the internal buildPatch() loop.
 
         In:
@@ -164,7 +171,7 @@ class _SimpleImporter(ImportPatcher):
             rec_fid = record.fid
             if rec_fid not in id_data: continue
             for attr, value in id_data[rec_fid].iteritems():
-                if attrgetter(attr)(record) != value: break # TODO: cache the attrgetter(attr)
+                if __attrgetters[attr](record) != value: break
             else: continue
             for attr, value in id_data[rec_fid].iteritems():
                 record.__setattr__(attr, value)
@@ -499,13 +506,14 @@ class DestructiblePatcher(_SimpleImporter):
     # All destructibles may contain FIDs, so let longTypes be set automatically
     rec_attrs = {x: ('destructible',) for x in bush.game.destructible_types}
 
-    def _inner_loop(self, keep, records, top_mod_rec, type_count):
+    def _inner_loop(self, keep, records, top_mod_rec, type_count,
+                    __attrgetters=_attrgetters):
         id_data, set_id_data = self.id_data, set(self.id_data)
         for record in records:
             rec_fid = record.fid
             if rec_fid not in set_id_data: continue
             for attr, value in id_data[rec_fid].iteritems():
-                rec_attr = record.__getattribute__(attr)
+                rec_attr = __attrgetters[attr](record)
                 if isinstance(rec_attr, str) and isinstance(value, str):
                     if rec_attr.lower() != value.lower():
                         break
@@ -581,26 +589,27 @@ class GraphicsPatcher(_SimpleImporter):
                 temp_id_data[fid] = dict(
                     (attr, record.__getattribute__(attr)) for attr in recAttrs)
 
-    def _inner_loop(self, keep, records, top_mod_rec, type_count):
+    def _inner_loop(self, keep, records, top_mod_rec, type_count,
+                    __attrgetters=_attrgetters):
         id_data = self.id_data
         for record in records:
             fid = record.fid
             if fid not in id_data: continue
             for attr, value in id_data[fid].iteritems():
-                if isinstance(record.__getattribute__(attr),
+                rec_attr = __attrgetters[attr](record)
+                if isinstance(rec_attr,
                               basestring) and isinstance(value, basestring):
-                    if record.__getattribute__(attr).lower() != value.lower():
+                    if rec_attr.lower() != value.lower():
                         break
                     continue
                 elif attr in bush.game.graphicsModelAttrs:
                     try:
-                        if record.__getattribute__(
-                                attr).modPath.lower() != value.modPath.lower():
+                        if rec_attr.modPath.lower() != value.modPath.lower():
                             break
                         continue
                     except: break  # assume they are not equal (ie they
                         # aren't __both__ NONE)
-                if record.__getattribute__(attr) != value: break
+                if rec_attr != value: break
             else: continue
             for attr, value in id_data[fid].iteritems():
                 record.__setattr__(attr, value)
@@ -745,18 +754,24 @@ class ActorImporter(_SimpleImporter):
                         (subattr, attrgetter(subattr)(record))
                         for subattr in attr)
 
-    def _inner_loop(self, keep, records, top_mod_rec, type_count):
+    def _inner_loop(self, keep, records, top_mod_rec, type_count,
+                    __attrgetters=_attrgetters):
         id_data, set_id_data = self.id_data, set(self.id_data)
         for record in records:
             fid = record.fid
             if fid not in set_id_data: continue
             for attr, value in id_data[fid].iteritems():
-                if reduce(getattr, attr.split('.'), record) != value: break
+                if __attrgetters[attr](record) != value: break
             else: continue
             for attr, value in id_data[fid].iteritems():
                 # OOPS: line below is the only diff from base _inner_loop()
-                setattr(reduce(getattr, attr.split('.')[:-1], record),
-                        attr.split('.')[-1], value)
+                dot_dex = attr.rfind(u'.')
+                if dot_dex > 0:
+                    parent_attr = attr[:dot_dex]
+                    leaf_attr = attr[dot_dex + 1:]
+                    __attrgetters[parent_attr](record).__setattr__(leaf_attr, value)
+                else:
+                    record.__setattr__(attr, value)
             keep(fid)
             type_count[top_mod_rec] += 1
 
@@ -1301,19 +1316,20 @@ class ImportRelations(_SimpleImporter):
                 if fid not in id_relations: continue
                 patchBlock.setRecord(record.getTypeCopy(mapper))
 
-    def _inner_loop(self, keep, records, top_mod_rec, type_count):
-        id_data, set_id_data = self.id_data, set(self.id_data)
+    def _inner_loop(self, keep, records, top_mod_rec, type_count,
+                    __attrgetters=_attrgetters):
+        id_data= self.id_data
         rel_attrs = bush.game.relations_attrs
         for record in records:
             fid = record.fid
-            if fid in set_id_data:
-                newRelations = set(id_data[fid])
-                curRelations = set(tuple(getattr(r, a) for a in rel_attrs)
-                                   for r in record.relations)
+            if fid in id_data:
+                new_relations = set(id_data[fid])
+                cur_relations = {tuple(getattr(r, a) for a in rel_attrs) for r
+                                 in record.relations}
                 doKeep = False
                 # Preserve changed relations and create new relations for the
                 # added ones that have been merged
-                for changed_attrs in newRelations - curRelations:
+                for changed_attrs in new_relations - cur_relations:
                     # The target faction is always first, for all games
                     faction = changed_attrs[0]
                     for entry in record.relations:
@@ -2558,7 +2574,8 @@ class WeaponModsPatcher(_SimpleImporter):
         'vatsModReqiured', 'scopeModel', 'dnamFlags1.hasScope',
         'dnamFlags2.scopeFromMod')}
 
-    def buildPatch(self, log, progress, types=None):
+    def buildPatch(self, log, progress, types=None,
+                   __attrgetters=_attrgetters):
         """Merge last version of record with patched destructible data as needed."""
         if not self.isActive: return
         modFile = self.patchFile
@@ -2594,9 +2611,9 @@ class WeaponModsPatcher(_SimpleImporter):
                     continue
                 for attr,value in id_data[fid].iteritems():
                     #record.__setattr__(attr,value)
-                    sattr = attr.split('.')
-                    lastattr = sattr.pop()
-                    attrgetter(sattr)(record).__setattr__(lastattr, value)
+                    dot_dex = attr.rfind(u'.')
+                    __attrgetters[attr[:dot_dex]](record).__setattr__(
+                        attr[dot_dex + 1:], value)
                 keep(fid)
                 type_count[type] += 1
         id_data = None
