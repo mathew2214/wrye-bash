@@ -85,7 +85,7 @@ class _SimpleImporter(ImportPatcher):
         """Common initData pattern.
 
         Used in KFFZPatcher, DeathItemPatcher, SoundPatcher, ImportScripts,
-        WeaponModsPatcher.
+        WeaponModsPatcher, ActorImporter.
         Adding _init_data_loop absorbed GraphicsPatcher also.
         """
         if not self.isActive: return
@@ -673,70 +673,7 @@ class CBash_GraphicsPatcher(_RecTypeModLogging):
 #------------------------------------------------------------------------------
 class ActorImporter(_SimpleImporter):
     # note peculiar mapping of record type to dictionaries[tag, attributes]
-    rec_attrs = bush.game.actor_importer_attrs # TODO: refactor to use attrgetter as in base class dropping overrides
-
-    def initData(self,progress):
-        """Get actors from source files."""
-        if not self.isActive: return
-        id_data = self.id_data
-        loadFactory = LoadFactory(False, *self.recAttrs_class.keys())
-        longTypes = self.longTypes & set(
-            x.classType for x in self.recAttrs_class)
-        progress.setFull(len(self.srcs))
-        cachedMasters = {}
-        minfs = self.patchFile.p_file_minfos
-        for index,srcMod in enumerate(self.srcs):
-            temp_id_data = {}
-            if srcMod not in minfs: continue
-            srcInfo = minfs[srcMod]
-            srcFile = ModFile(srcInfo,loadFactory)
-            masters = srcInfo.get_masters()
-            srcFile.load(True)
-            srcFile.convertToLongFids(longTypes)
-            mapper = srcFile.getLongMapper()
-            for recClass in self.recAttrs_class:
-                if recClass.classType not in srcFile.tops: continue
-                self.srcClasses.add(recClass)
-                self.classestemp.add(recClass)
-                self._init_data_loop(mapper, recClass, srcFile, srcMod,
-                                     temp_id_data)
-            for master in masters:
-                if master not in minfs: continue # or break filter mods
-                if master in cachedMasters:
-                    masterFile = cachedMasters[master]
-                else:
-                    masterInfo = minfs[master]
-                    masterFile = ModFile(masterInfo,loadFactory)
-                    masterFile.load(True)
-                    masterFile.convertToLongFids(longTypes)
-                    cachedMasters[master] = masterFile
-                mapper = masterFile.getLongMapper()
-                for recClass in self.recAttrs_class:
-                    if recClass.classType not in masterFile.tops: continue
-                    if recClass not in self.classestemp: continue
-                    for record in masterFile.tops[
-                        recClass.classType].getActiveRecords():
-                        fid = mapper(record.fid)
-                        if fid not in temp_id_data: continue
-                        for attr, value in temp_id_data[fid].iteritems():
-                            if isinstance(attr, basestring):
-                                if value == attrgetter(attr)(record):
-                                    continue
-                                else:
-                                    id_data[fid][attr] = value
-                            elif isinstance(attr,(list,tuple,set)):
-                                temp_values = {}
-                                keep = False
-                                for subattr in attr:
-                                    if value[subattr] != attrgetter(subattr)(
-                                            record):
-                                        keep = True
-                                    temp_values[subattr] = value[subattr]
-                                if keep:
-                                    id_data[fid].update(temp_values)
-            progress.plus()
-        self.longTypes &= set(x.classType for x in self.srcClasses)
-        self.isActive = bool(self.srcClasses)
+    rec_attrs = bush.game.actor_importer_attrs
 
     def _init_data_loop(self, mapper, recClass, srcFile, srcMod, temp_id_data):
         mod_tags = srcFile.fileInfo.getBashTags()
@@ -745,14 +682,8 @@ class ActorImporter(_SimpleImporter):
             attrs for t, attrs in tags_to_attrs.iteritems() if t in mod_tags))
         for record in srcFile.tops[recClass.classType].getActiveRecords():
             fid = mapper(record.fid)
-            temp_id_data[fid] = dict()
-            for attr in attrs:
-                if isinstance(attr, basestring):
-                    temp_id_data[fid][attr] = attrgetter(attr)(record)
-                elif isinstance(attr, (list, tuple, set)):
-                    temp_id_data[fid][attr] = dict(
-                        (subattr, attrgetter(subattr)(record))
-                        for subattr in attr)
+            temp_id_data[fid] = {attr: attrgetter(attr)(record) for attr in
+                                 attrs}
 
     def _inner_loop(self, keep, records, top_mod_rec, type_count,
                     __attrgetters=_attrgetters):
