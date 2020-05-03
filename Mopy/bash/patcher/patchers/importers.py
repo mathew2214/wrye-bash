@@ -508,23 +508,16 @@ class DestructiblePatcher(_SimpleImporter):
 
     def _inner_loop(self, keep, records, top_mod_rec, type_count,
                     __attrgetters=_attrgetters):
-        id_data, set_id_data = self.id_data, set(self.id_data)
+        id_data = self.id_data
         for record in records:
             rec_fid = record.fid
-            if rec_fid not in set_id_data: continue
+            if rec_fid not in id_data: continue
             for attr, value in id_data[rec_fid].iteritems():
                 rec_attr = __attrgetters[attr](record)
                 if isinstance(rec_attr, str) and isinstance(value, str):
                     if rec_attr.lower() != value.lower():
                         break
                     continue
-                elif attr == 'model':
-                    try:
-                        if rec_attr.modPath.lower() != value.modPath.lower():
-                            break
-                        continue
-                    except:
-                        break #assume they are not equal (ie they aren't __both__ NONE)
                 if rec_attr != value:
                     break
             else:
