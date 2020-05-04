@@ -2491,57 +2491,44 @@ class WeaponModsPatcher(_SimpleImporter):
     """Merge changes to weapon modifications for FalloutNV."""
     scanOrder = 27
     editOrder = 27
-    rec_attrs = {'WEAP': ('modelWithMods', 'firstPersonModelWithMods',
-        'weaponMods', 'soundMod1Shoot3Ds', 'soundMod1Shoot2D', 'effectMod1',
-        'effectMod2', 'effectMod3', 'valueAMod1', 'valueAMod2', 'valueAMod3',
-        'valueBMod1', 'valueBMod2', 'valueBMod3', 'reloadAnimationMod',
-        'vatsModReqiured', 'scopeModel', 'dnamFlags1.hasScope',
-        'dnamFlags2.scopeFromMod')}
+    rec_attrs = {b'WEAP': (
+        u'modelWithMods', u'firstPersonModelWithMods', u'weaponMods',
+        u'soundMod1Shoot3Ds', u'soundMod1Shoot2D', u'effectMod1',
+        u'effectMod2', u'effectMod3', u'valueAMod1', u'valueAMod2',
+        u'valueAMod3', u'valueBMod1', u'valueBMod2', u'valueBMod3',
+        u'reloadAnimationMod', u'vatsModReqiured', u'scopeModel',
+        u'dnamFlags1.hasScope', u'dnamFlags2.scopeFromMod')}
 
-    def buildPatch(self, log, progress, types=None,
-                   __attrgetters=_attrgetters):
+    def _inner_loop(self, keep, records, top_mod_rec, type_count,
+                    __attrgetters=_attrgetters):
         """Merge last version of record with patched destructible data as needed."""
-        if not self.isActive: return
-        modFile = self.patchFile
-        keep = self.patchFile.getKeeper()
         id_data = self.id_data
-        type_count = {}
-        for recClass in self.srcClasses:
-            type = recClass.classType
-            if type not in modFile.tops: continue
-            type_count[type] = 0
-            for record in modFile.tops[type].records:
-                fid = record.fid
-                if fid not in id_data: continue
-                for attr,value in id_data[fid].iteritems():
-                    rec_attr = attrgetter(attr)(record)
-                    if isinstance(rec_attr, str) and isinstance(value, str):
-                        #if record.__getattribute__(attr).lower() != value.lower():
-                        if rec_attr.lower() != value.lower():
-                            break
-                        continue
-                    elif attr == 'model':
-                        try:
-                            #if record.__getattribute__(attr).modPath.lower() != value.modPath.lower():
-                            if rec_attr.modPath.lower() != value.modPath.lower():
-                                break
-                            continue
-                        except:
-                            break #assume they are not equal (ie they aren't __both__ NONE)
-                    #if record.__getattribute__(attr) != value:
-                    if rec_attr != value:
+        for record in records:
+            rec_fid = record.fid
+            if rec_fid not in id_data: continue
+            for attr,value in id_data[rec_fid].iteritems():
+                rec_attr = attrgetter(attr)(record)
+                if isinstance(rec_attr, str) and isinstance(value, str):
+                    #if record.__getattribute__(attr).lower() != value.lower():
+                    if rec_attr.lower() != value.lower():
                         break
-                else:
                     continue
-                for attr,value in id_data[fid].iteritems():
-                    #record.__setattr__(attr,value)
-                    dot_dex = attr.rfind(u'.')
-                    __attrgetters[attr[:dot_dex]](record).__setattr__(
-                        attr[dot_dex + 1:], value)
-                keep(fid)
-                type_count[type] += 1
-        id_data = None
-        self._patchLog(log, type_count)
+                #if record.__getattribute__(attr) != value:
+                if rec_attr != value:
+                    break
+            else:
+                continue
+            for attr,value in id_data[rec_fid].iteritems():
+                #record.__setattr__(attr,value)
+                dot_dex = attr.rfind(u'.')
+                if dot_dex > 0:
+                    parent_attr = attr[:dot_dex]
+                    leaf_attr = attr[dot_dex + 1:]
+                    __attrgetters[parent_attr](record).__setattr__(leaf_attr, value)
+                else:
+                    record.__setattr__(attr, value)
+            keep(rec_fid)
+            type_count[top_mod_rec] += 1
 
 #------------------------------------------------------------------------------
 class KeywordsImporter(_SimpleImporter):
