@@ -180,8 +180,7 @@ def unpack_header(ins, __rh=RecordHeader):
     header_sig = args[0]
     if header_sig not in __rh.valid_header_sigs:
         raise exception.ModError(ins.inName,
-                                 u'Bad header type: %r' % header_sig.decode(
-                                     'ascii'))
+                                 u'Bad header type: %r' % header_sig)
     #--Record
     if header_sig != b'GRUP':
         return RecHeader(*args)
