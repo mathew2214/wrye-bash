@@ -29,7 +29,7 @@ from ._mergeability import is_esl_capable
 from .loot_parser import libloot_version, LOOTParser
 from .. import balt, bolt, bush, bass, load_order
 from ..bolt import GPath, deprint, sio, struct_pack, struct_unpack
-from ..brec import ModReader, MreRecord, RecordHeader, SubrecordBlob
+from ..brec import ModReader, MreRecord, RecordHeader, SubrecordBlob, null1
 from ..cint import ObBaseRecord, ObCollection
 from ..exception import BoltError, CancelError, ModError
 
@@ -732,7 +732,7 @@ class ModDetails(object):
                             # FIXME copied from readString
                             eid = u'\n'.join(bolt.decoder(x, bolt.pluginEncoding,
                                 avoidEncodings=(u'utf8', u'utf-8')) for x
-                                in subrec.mel_data.rstrip(b'\0').split('\n'))
+                                in subrec.mel_data.rstrip(null1).split('\n'))
                             break
                         recs.seek(rec_siz, 1)
                     records.append((header.fid,eid))
