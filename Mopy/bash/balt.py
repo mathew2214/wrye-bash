@@ -528,9 +528,9 @@ def convert_wtext_to_html(logPath, logText):
 
 def playSound(parent,sound):
     if not sound: return
-    sound = wx.Sound(sound)
+    sound = wx.adv.Sound(sound)
     if sound.IsOk():
-        sound.Play(wx.SOUND_ASYNC)
+        sound.Play(wx.adv.SOUND_ASYNC)
     else:
         showError(parent,_(u"Invalid sound file %s.") % sound)
 
@@ -2136,8 +2136,8 @@ class ListBoxes(DialogWindow):
             layout.add((HBoxedLayout(self, item_expand=True, title=title,
                                      item_weight=1, items=[checksCtrl]),
                         LayoutOptions(expand=True, weight=1)))
-        btns = [OkButton(self, label=bOk, default=True),
-                CancelButton(self, label=bCancel) if canCancel else None]
+        btns = [OkButton(self, btn_label=bOk, default=True),
+                CancelButton(self, btn_label=bCancel) if canCancel else None]
         layout.add((HLayout(spacing=5, items=btns),
                     LayoutOptions(h_align=RIGHT)))
         layout.apply_to(self)
