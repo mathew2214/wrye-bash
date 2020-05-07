@@ -178,35 +178,16 @@
 
 <h3 id="install-components">Python Components <a class="back2top" href="#contents">Back to top</a></h3>
 <p>If you are installing the Python version of Wrye Bash and wish to install the Python dependencies separately, the following must be installed.
-<p class="emphasis">Note that the 32-bit versions are required even if you are on a 64-bit operating system.
+<p class="emphasis">Note that the 64-bit versions are <em>required</em> - we no longer support 32-bit operating systems.</p>
 <ul>
-    <li><a href="https://www.python.org/ftp/python/2.7.16/python-2.7.16.msi">Python 2.7.16</a>: Versions prior to 2.7.16 may work with Wrye Bash, but have not been tested. Updating is recommended for bug and security fixes.
+    <li><a href="https://www.python.org/ftp/python/2.7.17/python-2.7.17.msi">Python 2.7.17</a>: Versions prior to 2.7.17 may work with Wrye
+    Bash, but have not been tested. Updating is recommended for bug and security fixes.</li>
     <li><a href="https://pypi.org/project/wxPython">wxPython 4.0.7.post2 for Python 2.7</a>: Newer versions may work, older ones will not</li>
     <li><a href="https://pypi.org/project/chardet/">Mozilla's chardet library</a>: Wrye Bash uses this library to help in detecting
-        character encodings used when reading and writing encoded Unicode strings.
-    <li><a href="https://sourceforge.net/projects/pywin32/files/pywin32/Build%20220/pywin32-220.win32-py2.7.exe/download">PyWin32</a>: This component is required for Wizards to function. If you do not wish to use Wizards, then it need not be installed.
+    character encodings used when reading and writing encoded Unicode strings.</li>
+    <li><a href="https://pypi.org/project/pywin32/">PyWin32</a>: Wrye Bash uses this library to interact with Windows in various ways.</li>
     <li><a href="https://pypi.python.org/pypi/scandir">scandir</a>: Optional but highly recommended module (in the standard library since
-    python 3.5). Scandir speeds up disk I/O operations (namely os. walk) by 5-50x on the Windows operating system family. There are several
-    ways to install Scandir, in levels of increasing complexity
-  <ul>
-    <li>The first is to download the Scandir wheel file (.whl)&nbsp; and install it using the Pip command line tool.</li>
-    <ul>
-        <li>Browse to the <a href="https://pypi.python.org/pypi/scandir" target="_blank">official Python Scandir page</a> and download <a href="https://files.pythonhosted.org/packages/9e/a5/56b4dec02b16bb720cac9872fccd63b61a815b70633ef15bfe3ea5ce4488/scandir-1.9.0-cp27-cp27m-win32.whl" target="_blank">scandir-1.9.0-cp27-cp27m-win32.whl</a> or newer. Remember the path to the download location on your hard disk.&nbsp; For this example we will use "C:\Downloads\".
-          <li>Open a Windows command or Powershell prompt and issue the <code>command python.exe -m pip install C:\Downloads\scandir-1.9.0-cp27-cp27m-win32.whl</code></li>
-      <li>Follow the instructions on screen if any appear.
-    </ul>
-    <li>The second method is to install Scandir via the Python pip package manager.
-    </li>
-    <ul>
-      <li>Open a Windows command prompt or Powershell prompt.
-      <li>Issue the command <code>python.exe -m pip install --upgrade scandir</code>
-      <ul>
-        <li>You may be asked to install the 'Microsoft Visual C++ Compiler for Python 2.7'. In this event, download and install the compiler from the <a href="https://www.microsoft.com/en-us/download/details.aspx?id=44266" target="_blank">official Microsoft download page</a>.
-        <li>You may also be asked to install Python "setuptools". To install setuptools, issue the command (from within the same command prompt is fine) <code>python.exe -m pip install --upgrade setuptools</code>
-        <li>Once these two tools are installed the installation should proceed as expected.
-      </ul>
-    </ul>
-  </ul>
+        python 3.5). Scandir speeds up disk I/O operations (namely os. walk) by 5-50x on the Windows operating system family.</li>
 </ul>
 
 <h2 id="bain">Installers Tab <a class="back2top" href="#contents">Back to top</a></h2>
@@ -671,7 +652,7 @@ tab. The directories skipped are:
         <tr>
             <td colspan="3" id="bainAnneal">Anneal</td>
             <td>Installs missing files and corrects install order errors. Note: If an already installed file is changed outside of Wrye Bash control, Wrye Bash will not anneal that file. Anneal is relative to other installed packages. This is because we do not want to override user changes like cleaning plugins and the like. If you do want to override the change use
-                <a href="#bainInstall">Install</a> instead. Note2: The change will be detected immediately in case of ini tweaks, mods or bsas, but on next Bash load for other files (like nifs etc). To detect the change without restarting
+                <a href="#bainInstallCurrent">Install Current</a> instead. Note2: The change will be detected immediately in case of ini tweaks, mods or bsas, but on next Bash load for other files (like nifs etc). To detect the change without restarting
                 <a href="#bainQuickRefresh">(Quick) Refresh</a> the package.</td>
         </tr>
         <tr>
@@ -694,8 +675,13 @@ tab. The directories skipped are:
             <td>Moves the selected package(s) to the specified position.</td>
         </tr>
         <tr>
-            <td rowspan="7">Install..</td>
-            <td colspan="2" id="bainInstall">Install</td>
+            <td colspan="3" id="bainInstall">Install...</td>
+            <td>Installs the selected package, preferring a BAIN or FOMOD
+                wizard if it exists.</td>
+        </tr>
+        <tr>
+            <td rowspan="8">Advanced Installation..</td>
+            <td colspan="2" id="bainInstallCurrent">Install Current</td>
             <td>Fully installs the package except for files that would be overridden by later packages.</td>
         </tr>
         <tr>
@@ -707,13 +693,17 @@ tab. The directories skipped are:
             <td>Moves the package to the end of the order list and installs it.</td>
         </tr>
         <tr>
+            <td colspan="2" id="bainFomod">FOMOD Installer...</td>
+            <td>Runs the FOMOD wizard for this package, if it has one.</td>
+        </tr>
+        <tr>
             <td rowspan="4" id="bainWizardMenu">Wizard Installer...</td>
             <td id="bainWizard">Manual Wizard...</td>
-            <td>Runs the Wizard for the package, if it has one.</td>
+            <td>Runs the BAIN wizard for the package, if it has one.</td>
         </tr>
         <tr>
             <td>Auto Wizard...</td>
-            <td>Runs the Wizard for the package, if it has one, selecting the default options.</td>
+            <td>Runs the BAIN wizard for the package, if it has one, selecting the default options.</td>
         </tr>
         <tr>
             <td>View Wizard...</td>
@@ -4229,6 +4219,7 @@ C.Location, -C.LockList
                     <li>(ENCH) Object Effect</li>
                     <li>(EXPL) Explosion</li>
                     <li>(EYES) Eyes</li>
+                    <li>(FACT) Faction</li>
                     <li>(FLOR) Flora</li>
                     <li>(FURN) Furniture</li>
                     <li>(HAZD) Hazard</li>
@@ -4758,8 +4749,112 @@ C.Location, -C.LockList
     <li>The plugin must not be active at the time the patch is built. Note that if the user doesn't have all the plugin's masters installed, it will have to remain deactivated at all times.
     <li>Filtering is done according to the currently active plugins: it is therefore very important that all the desired plugins are active when the Bashed Patch is built.
     <li>Filtering is mostly limited to the top level, ie. if the plugin a record is from is missing, the record will be skipped. However, if a record references another record, and the latter's plugin is missing, the former will not be skipped, and the Bashed Patch will end up dependent on the latter's plugin being installed.
-    <li>There are a few exceptions to the above limitation: entries in leveled lists will be filtered, as will spells, factions and items referenced in Creature and NPC records.
+    <li>There are a few exceptions to the above limitation. The following table
+        lists subrecords that contain lists of FormIDs. Any entries in such
+        lists that do not map back to a loaded mods are simply filtered out by
+        the Bashed Patch when performing merge filtering:</li>
 </ul>
+<table>
+    <thead>
+        <tr>
+            <th colspan="3">Filtered Subrecords</th>
+        </tr>
+        <tr>
+            <th>Record Type</th>
+            <th>Subrecords</th>
+            <th>Available For</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>(COBJ) Constructible Object</td>
+            <td>
+                <ul>
+                    <li>(INAM) Items</li>
+                </ul>
+            </td>
+            <td>Skyrim, Enderal&colon; Forgotten Stories &amp; Skyrim&colon;
+                Special Edition</td>
+        </tr>
+        <tr>
+            <td>(CONT) Container</td>
+            <td>
+                <ul>
+                    <li>(INAM) Items</li>
+                </ul>
+            </td>
+            <td>All but Fallout 4</td>
+        </tr>
+        <tr>
+            <td>(CREA) Creature</td>
+            <td>
+                <ul>
+                    <li>(CNTO) Items</li>
+                    <li>(SNAM) Factions</li>
+                    <li>(SPLO) Spells</li>
+                </ul>
+            </td>
+            <td>Oblivion, Fallout 3 &amp; Fallout&colon; New Vegas</td>
+        </tr>
+        <tr>
+            <td>(LVLC) Leveled Creature</td>
+            <td>
+                <ul>
+                    <li>(LVLO) Entries</li>
+                </ul>
+            </td>
+            <td>Oblivion, Fallout 3 &amp; Fallout&colon; New Vegas</td>
+        </tr>
+        <tr>
+            <td>(LVLI) Leveled Item</td>
+            <td>
+                <ul>
+                    <li>(LVLO) Entries</li>
+                </ul>
+            </td>
+            <td>All games</td>
+        </tr>
+        <tr>
+            <td>(LVLN) Leveled Non-Player Character</td>
+            <td>
+                <ul>
+                    <li>(LVLO) Entries</li>
+                </ul>
+            </td>
+            <td>All but Oblivion</td>
+        </tr>
+        <tr>
+            <td>(LVSP) Leveled Spell</td>
+            <td>
+                <ul>
+                    <li>(LVLO) Entries</li>
+                </ul>
+            </td>
+            <td>All but Fallout 3, Fallout&colon; New Vegas &amp; Fallout 4</td>
+        </tr>
+        <tr>
+            <td>(NPC_) Non-Player Character</td>
+            <td>
+                <ul>
+                    <li>(CNTO) Items</li>
+                    <li>(SNAM) Factions</li>
+                    <li>(SPLO) Spells</li>
+                </ul>
+            </td>
+            <td>All but Fallout 4</td>
+        </tr>
+        <tr>
+            <td>(OTFT) Outfit</td>
+            <td>
+                <ul>
+                    <li>(INAM) Items</li>
+                </ul>
+            </td>
+            <td>Skyrim, Enderal&colon; Forgotten Stories &amp; Skyrim&colon;
+                Special Edition</td>
+        </tr>
+    </tbody>
+</table>
 
 
 <h3 id="patch-iim">Item Interchange Mode <a class="back2top" href="#contents">Back to top</a></h3>
@@ -4872,7 +4967,7 @@ C.Location, -C.LockList
         <tr><td>Nvidia Fog Fix<td>Ensures that cells have at least one non-zero fog value. For avoiding the Nvidia fog-related black screen. This feature is based on <a href="https://www.nexusmods.com/oblivion/mods/11167/?">Quarn's Nvidia Black Screen Fix</a>.
         <tr><td>Reweigh: Arrows<td>Reweighs arrows to a maximum weight.
         <tr><td>Reweigh: Ingredients<td>Reweighs ingredients to a maximum weight.
-        <tr><td>Reweigh: Potions (Maximum)<td>Reweighs potions to a maximum weight. This does not affect potions with script effects or with current weight &gt;= 1.0. Thus it should not affect alcoholic beverages or scripted "potions" like HTS water skins. Note that this is similar to, but not the same as, the Reweigh Potions command for savegames, which reweighs user created potions rather than mod created potions.
+        <tr><td>Reweigh: Potions (Maximum)<td>Reweighs potions to a maximum weight. This does not affect potions with script effects, ones with OBME effects or with current weight &gt;= 1.0. Thus it should not affect alcoholic beverages or scripted "potions" like HTS water skins. Note that this is similar to, but not the same as, the Reweigh Potions command for savegames, which reweighs user created potions rather than mod created potions.
         <tr><td>Reweigh: Potions (Minimum)<td>Reweighs potions to a minimum weight.
         <tr><td>Reweigh: Staffs/Staves<td>Reweighs staves to a maximum weight.
         <tr><td>Right Hand Rings<td>Makes rings behave more consistently by making all rings prefer to be on the right hand. With this tweak activated, rings will only equip to the left hand if the right hand has a ring, but the left hand does not. You can use this to make one ring permanently equipped - just equip it to the left hand and it will stay on until you specifically unequip it.
